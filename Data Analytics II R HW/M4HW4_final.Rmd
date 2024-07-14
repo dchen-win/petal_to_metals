@@ -1,0 +1,184 @@
+---
+title: "HW Assignment 4"
+author: "Cindy Chenr"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+R Question
+1. (5 points) In 1968, Dr. Benjamin Spock was tried in Boston on charges of conspiring to violate
+the Selective Service Act by encouraging young men to resist the draft for military service in Vietnam. The defense in the case challenged the method of jury selection claiming that women were
+underrepresented on jury panels by the process. The defense argued specifically that the judge in the
+Spock trial had a history of venires (panels of potential jurors) in which women were systematically
+underrepresented compared to the venires of six other Boston area district judges. These data can
+be found in case0502 in the Sleuth3 package.
+Analyze the data by treating the number of women out of 30 people on a venire as a binomial
+response (that is, you’ll change the percent women in the datasheet to a count by multiplying by 30
+and rounding) and judge as an explanatory variable .
+(a) Is there evidence of over dispersion in these data? Please explain (i.e., don’t just answer “yes”
+or “no”).
+
+```{r}
+library(Sleuth3)
+library(dplyr)
+data('case0502')
+head(case0502)
+```
+```{r}
+
+case0502 <- case0502 |>
+mutate(CountWomen = round(case0502$Percent / 100 * 30))
+head(case0502)
+```
+
+```{r}
+case0502$Countmen <- 30 - case0502$CountWomen
+model <- glm(cbind(CountWomen, Countmen) ~ Judge, data = case0502, family = binomial)
+
+deviance <- deviance(model)
+df_resid <- df.residual(model)
+
+
+dispersion <- deviance / df_resid
+dispersion
+
+# Check for overdispersion
+if (dispersion > 1) {
+  cat("There is evidence of overdispersion in the data.\n")
+} else {
+  cat("There is no evidence of overdispersion in the data.\n")
+}
+```
+Answer:
+From the result, we can see that dispersion = 0.7979344 which is less than 1.
+Therefore, there is no evidence of over dispersion in the data.
+
+
+(b) Do the odds of a female on a venire differ for the different judges? Please explain.
+
+
+```{r}
+summary(model)
+```
+
+
+
+```{r}
+coefficients <- coef(model)
+
+odds_ratios <- exp(coefficients)
+
+print(odds_ratios)
+```
+Answer:
+If the odds ratio for a judge is greater than 1, it suggests that the odds of 
+having a female on a venire for that judge are higher compared to Judge A.
+If the odds ratio for a judge is less than 1, it suggests that the odds of having 
+a female on a venire for that judge are lower compared to Judge A.
+
+The odds ratio for Judge B is 1.0199402 which indicates that the odds of having 
+a female on a venire for Judge B are slightly higher than for Judge A, but the 
+difference may not be obvious.
+
+The odds ratio for Judge C is 0.7886029, JudgeD is 0.7058824, JudgeE is 0.6859797,
+JudgeF is 0.7193192, JudgeSpock's is 0.3375959 which indicates that the odds of having 
+a female on a venire for Judge B are slightly lower than for Judge A, but the 
+difference may not be obvious.
+
+(c) Do judges A-F differ in their probabilities of selecting females to the venire? Please explain.
+
+```{r}
+probabilities <- exp(coefficients) / (1 + exp(coefficients))
+
+print(probabilities)
+```
+Answer:
+
+The probability for Judge A is approximately 0.340. Comparing this probability 
+to those of Judges B-F and Spock's, we can observe the differences JudgeB: 0.5049358;
+JudgeC: 0.4409044; JudgeD: 0.4137931; JudgeE: 0.4068730; JudgeF: 0.4183744;
+JudgeSpock's: 0.2523901. The probabilities for Judges A-F are substantially 
+different from each other, it suggests that there are variations in the 
+likelihood of selecting females to the venire among the judges.
+
+
+
+(d) How different are the odds of having a woman on the Spock judge’s venires from the odds of
+having a woman on the venires of other judges? Please explain.
+(Hint: In parts (b) through (d), think about what models you could compare using drop-in-deviance
+tests.)
+
+```{r}
+model_exclude_spock <- glm(cbind(CountWomen, Countmen) ~ Judge, 
+                data = subset(case0502, Judge != "Spock's"), family = binomial)
+
+
+deviance_model_all_judges <- deviance(model)
+
+
+deviance_model_exclude_spock <- deviance(model_exclude_spock)
+
+# Perform drop-in-deviance test
+drop_in_deviance <- deviance_model_all_judges - deviance_model_exclude_spock
+
+
+cat("Drop-in-deviance between 2 models:", drop_in_deviance, "\n")
+```
+Answer:
+In this case, the drop-in-deviance is positive, indicating that Model 1 which 
+includes Judge Spockhas a higher deviance compared to Model 2 which excludes 
+Judge Spock. This suggests that the model with all judges fits the data less well 
+compared to the model without Judge Spock.
+
+
+
+
+Conceptual Questions
+2. (2 points) Give three explanations for why you may see evidence of extra-binomial variation in a
+logistic regression.
+
+Answer:
+Missing Factors: Some important factors that affect the outcome but aren't 
+included in the model, it can make the model look like it has more variation than 
+expected.
+
+Wrong model selection: If the model we are selecting is not
+good fit for the datasets, it will make the variation seem bigger than it really is.
+
+Correlated Data: When observations within the same group are more similar to 
+each other than to observations in other groups, it will lead to increased 
+variability.
+
+3. (2 points) In lecture, we saw that when we fit a logistic model when extra binomial variation is
+present, we get standard errors that are ’too small’. Explain why this gives misleading results.
+
+Answer:
+Underestimate uncertainty:
+The model is not fully account for all the variability
+in the data. The reason why is that model seem more sure
+about its predictions than it should be.
+
+Inflated significance: Smaller standard errors could make predictors look more important than they are. This could lead to thinking some factors are statistically 
+significant when they're not significant .
+
+
+Therefore, standard errors that are ’too small’ leads to
+wrong conclusion about how predictors affect the outcome.
+It misleading us that certain factors are more influential than they actually are.
+
+
+4. (1 point) Consider an experiment that studies the number of insects that survive a certain dose
+of an insecticide, using several batches of insects of size n each. The insects may be sensitive to
+factors that vary among batches during the experiment but these factors (such as temperature)
+were unmeasured. Explain why the distribution of the number of insects per batch surviving the
+experiment might show over dispersion relative to a binomial(n, p) distribution.
+
+Answer:
+Unexpected factor: The factors like temp, region, humidity 
+could affect how insects respond to the insecticide.
+
+Environment impact: Insects which live in the same enviroment have similar genes and could share information.
+That will have impact on survival rate.
+
+Sample size: The sample size is too small and it won't give me accurate picture.
+
+

@@ -1,0 +1,175 @@
+---
+title: "HW Assignment 7"
+author: "Cindy Chenr"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+R Question
+1. (5 points) Recall the data in ex2119 in the Sleuth3 library. These data record results from 10 dierent
+studies in which the relationship between breast cancer and whether or not a woman had breast fed her
+child(ren) was examined. Earlier in the course, you looked at these data, and treated study as a fixed
+effect. Another way to consider these data is by taking study to be a random effect.
+
+(a) Fit an appropriate GLMM to the breast cancer data, using study as a random effect. Report the
+estimated random effect variance and the fixed effect estimate for the Lactate variable, as well as
+its standard error.
+
+```{r}
+#install.packages("lme4")
+```
+
+
+```{r}
+library(Sleuth3)
+library(lme4)
+library(reshape2)
+```
+
+```{r}
+data(ex2119)
+head(ex2119)
+```
+
+```{r}
+ex2119_data <- melt(ex2119, id.vars = c("Study", "Lactate"), 
+                    measure.vars = c("Cancer", "NoCancer"), 
+                    variable.name = "Outcome", value.name = "Count")
+
+
+ex2119_data$Cancer_or_not <- as.integer(ex2119_data$Outcome == "Cancer")
+
+# Fit mixed-effects logistic regression model
+model <- glmer(Cancer_or_not ~ Lactate + (1 | Study), 
+               family = binomial, data = ex2119_data)
+
+summary(model)
+
+
+fixed_effects <- fixef(model)
+fixed_effects_se <- sqrt(diag(vcov(model)))
+
+
+random_effects_var <- as.numeric(VarCorr(model)$Study[1])
+
+
+#print(ex2119_data)
+print(fixed_effects)
+print(fixed_effects_se)
+print(random_effects_var)
+
+
+```
+```{r}
+random_effects <- ranef(model)$Study
+random_effects
+```
+
+
+```{r}
+random_variance <- attr(summary(model)$varcor, "sc")^2
+random_variance
+```
+```{r}
+fixed_estimate <- summary(model)$coefficients["Lactateyes", "Estimate"]
+fixed_estimate
+```
+```{r}
+standard_error <- summary(model)$coefficients["Lactateyes", "Std. Error"]
+standard_error
+```
+
+
+(b) Create a normal probability plot of the random eects. Do you notice anything unusual?
+
+
+```{r}
+
+# Convert random effects to a vector
+random_effects_vector <- unlist(random_effects)
+
+qqnorm(random_effects_vector)
+qqline(random_effects_vector)
+
+
+
+```
+Answer:
+The line "Sample Quantiles" crosses all "Theoretical Quantiles" at 0 means the
+distribution of the random effects closely matches the expected distribution.
+The alignment suggests that the random efforts follow a normal distribution.
+
+
+
+(c) Write a few sentences about how you might proceed with an analysis from here. There are several
+dierent approaches you could take—just decide on one and describe it briefly.
+
+Answer:
+Based on GLMM result, neither the intercept nor the lactate variable (Lactateyes) 
+appears to have a significant effect on breast cancer occurrence since p-values 
+close to 1.
+
+For next steps, I will ensure the data accuracy and handle any missing values and
+outliers and assess the model's goodness of fit by using diagnostic plots like 
+residuals vs. fitted values.
+
+Then I will consider additional predictor variables.
+
+
+
+Conceptual Questions
+2. (3 points) Please answer true or false to the following. Explain/justify your answers.
+(a) One reason for using a mixed eects model is to account for the similarities among observations
+that are clustered together in groups.
+
+Answer:
+True. Mixed effects model are used to accommodate similarities among observations 
+clustered together in groups. It makes them effective for hierarchical or 
+clustered data structures.
+
+
+(b) If a GLMM does not converge in R, we should just go back to using a GLM approach.
+
+Answer:
+False. If a GLMM does not converge in R, the alternative approach will be
+adjusting optimization algorithms or refining model specifications before
+considering reverting to a GLM approach.
+
+
+
+(c) If an estimated random eect variance is small, that’s an indication that we 
+don’t need that random effect in the model.
+
+Answer:
+False. A small estimated random effects variance does not necessarily indicate 
+that the random effect is unnecessary. The significance of a random effect in a 
+model depends on its contribution to explaining the variation in the response 
+variable. SO even if the estimated variance of a random effect is small, it may 
+still be important for capturing and accounting for unobserved heterogeneity or 
+clustering within the datasets.
+
+
+3. (2 points) Consider the following R output from fitting a GLMM to the Donner party data (‘Donner‘
+in the ‘vcdExtra‘ package) using ‘family‘ as a random eect.
+
+Write a short paragraph that describes the results from fitting this model.
+
+Answer:
+In this GLMM model, it applied to Donner party data, utilizes a binomial family 
+with a logit link function. It incorporates fixed effects for age and sex, alongside a 
+random intercept for the family variable and indicates correlated outcomes within 
+the same family. With an AIC value of 116.1 means the model is good fit. Both 
+age and sex exhibit statistically significant associations with survival 
+probability, with older individuals and males less likely to survive. 
+The estimated coefficients for age, sex (male), and the intercept are -0.03452, 
+-1.21847, and 1.73785, respectively, with corresponding p-values of 0.03445, 
+0.02541, and 0.00514 which means statistical significance. The random 
+effect for family has a variance of 0.6738 and indicates moderate variability in 
+survival outcomes across families. Overall, the model highlights age, sex, and 
+familial clustering as key factors influencing survival within the Donner party 
+dataset.
+
+
+
+
+
+

@@ -1,0 +1,145 @@
+---
+title: "HW Assignment 8"
+author: "Cindy Chenr"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+R Question
+1. (5 points) Consider the crashi data in the VGAM library that we examined in Lab. Sometimes people
+will fit multiple linear regression models to data like this, not recognizing that the responses are counts.
+(a) Using the Time.Cat and Day.Cat variables that we created in Lab, fit a multiple linear regression
+model to the counts—be sure to include the interaction between Time.Cat and Day.Cat just as we
+did in the lab. How does the model fit compare to the negative binomial regression model that you
+fit in lab? Please explain.
+```{r}
+#install.packages('VGAM')
+```
+
+
+```{r}
+library(VGAM)
+library(MASS)
+library(dplyr)
+library(magrittr)
+hour <- rownames(crashi) ## grab the hours
+crashi2 <- stack(crashi) ## combine 7 columns of crashes into 1
+names(crashi2) <- c("Count","Day")
+crashi2$Day <- factor(crashi2$Day,levels(crashi2$Day)[c(2,6,7,5,1,3,4)])  # make sure the days are ordered correctly
+crashi2$Hour <- as.numeric(rep(hour, ncol(crashi)))  
+crashi2 %<>% mutate(.,Day.Cat = ifelse((Day != "Fri" & Day != "Sat" & Day != "Sun"),"Weekday",as.character(Day)), Time.Cat = cut(Hour,
+	breaks = c(-1, 5.5, 11.5, 18.5, 25),
+	labels = c("Early.Morn", "Morn", "Afternoon", "Evening")))
+head(crashi2)
+
+## add a column with hour and make it numeric (not categorical)
+head(crashi2)
+data(crashi2)
+head(crashi2)
+```
+```{r}
+unique_days <- unique(crashi2$Day.Cat)
+print(unique_days)
+```
+
+
+```{r}
+library(VGAM)
+lm_model <- lm(Count ~ Time.Cat * Day.Cat, data = crashi2)
+summary(lm_model)
+```
+```{r}
+mod3 <- glm.nb(Count ~ Day.Cat * Time.Cat, data = crashi2)
+summary(mod3)
+```
+Answer:
+Multiple linear regression model assumes a linear relationship between predictors
+and response variable. However, it didn't count the nature of the response variable.
+So it may lead to violations of assumptions such as normality and homoscedasticity.
+From the Adjusted R-squared value is 0.7402, indicating that approximately 74.02% 
+of the variance in the response variable is explained by the predictors. The 
+p-values for the coefficients suggest that all predictors are statistically significant.
+
+The negative binomial regression model is specifically designed for count data 
+and it will account for overdispersion and the count nature of the response variable.
+The dispersion parameter (Theta) is estimated to be approximately 10.55 which 
+indicates overdispersion. The model's log-likelihood value is -1405.533 .
+The p-values for the coefficients suggest that all predictors are statistically significant.
+
+Therefore, the multiple linear regression model assumes a linear relationship 
+between predictors and the response and it may not accurately capture the 
+relationship for count data. However, the negative binomial regression model 
+provides valid estimates and inferences by accounting for overdispersion and the 
+count nature of the response variable. The negative binomial regression model is 
+expected to provide a better fit and more reliable estimates for count data 
+compared to the multiple linear regression model.
+
+
+
+(b) Now compare the predicted number of crashes in the early morning on Saturdays using your model
+from part (a) and the negative binomial model from the Lab. Are they the same? 
+Different?
+
+```{r}
+
+newdat <- data.frame(Day.Cat = "Sat", Time.Cat = "Early.Morn")
+
+
+predict(lm_model, newdata = newdat, type = "response")
+predict(mod3, newdata = newdat, type = "response")
+
+```
+Answer:
+The predicted value of both models are identical.
+
+(c) Now examine the standard errors associated with the predictions from part (b). Are they the same?
+Different? Which model do you prefer? Please explain.
+
+```{r}
+lm_pred <- predict(lm_model, newdata = newdat, type = "response", se.fit = TRUE)
+mod3_pred <- predict(mod3, newdata = newdat, type = "response", se.fit = TRUE)
+
+
+lm_std_err <- lm_pred$se.fit
+mod3_std_err <- mod3_pred$se.fit
+
+cat("Standard errors for lm_model:", lm_std_err, "\n")
+cat("Standard errors for mod3:", mod3_std_err, "\n")
+```
+Answer:
+The standard errors for the predictions from the two models are different. The 
+standard error for lm_model is 8.528403, mod3 it is 4.868124.
+
+The standard error provides a measure of the uncertainty associated with the 
+predictions. A lower standard error suggests that the predictions are more 
+precise and have less variability. Therefore, from the standard errors, mod3 
+would be preferred over lm_model for making predictions.
+
+However, it's important to consider other factors such as model performance, 
+interpretability, and the context of the problem before making a final decision 
+on which model to prefer.
+
+Conceptual Question
+2. (5 points) Please find an article or web posting in which the authors discuss the statistical issues with
+large datasets. Write a short paragraph in which you identify at least one of the issues that the authors
+raise. Also please comment on whether you agree with or disagree with their assessment. Please submit
+either a PDF copy of the article you read, or a web link to the article or post.
+
+Answer:
+https://academic.oup.com/nsr/article/1/2/293/1397586
+
+The article mentioned various statistical challenges posed by the increasing 
+volume and complexity of data in modern research and industry settings. One of 
+the important issues is that the problem of noise accumulation can lead to 
+spurious correlations and affect the reliability of statistical inference in
+high-dimensional datasets. In this article, it emphasizes the importance of 
+developing robust statistical methods to mitigate the impact of noise 
+accumulation and ensure the validity of conclusions drawn from large datasets.
+I agree with the author's assessment of the issue of noise accumulation in 
+high-dimensional datasets. As datasets grow in size and becomes dimensionality, 
+it has higher probability to have more spurious correlations and misleading results
+as noise increases. However, Traditional statistical methods may not be 
+sufficient to address these challenges. Therefore, researchers can ensure the 
+integrity and reliability of their analyses to address the issues.
+

@@ -1,0 +1,171 @@
+---
+title: "HW Assignment 6"
+author: "Cindy Chenr"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+1. (5 points) Consider data on 4406 individuals, aged 66 and over, who are covered by Medicare, a public
+insurance program, in the file DT.rda. The objective is to model the number of physician/non-physician
+oce and hospital outpatient visits using available covariate information for the patients. The covariates
+include health status variables hosp (number of hospital stays), health (self-perceived health status),
+numchron (number of chronic conditions), as well as socioeconomic variables gender, school (number
+of years of education), and privins (private insurance indicator). Once you download the DT.rda file,
+you can load it into R using load("DT.rda").
+(a) Produce a histogram of the dependent variable. What types of statistical models (.e.g, Poisson
+regression, hurdle Poisson model, etc.) should you consider for these data? Give a brief justification
+for your answer.
+```{r}
+#install.packages("emmeans")
+#install.packages("pscl")
+```
+
+```{r}
+library(emmeans)
+library(ggplot2)
+library(pscl)
+load("C:/Users/15306/Desktop/ST 517 Data Analytics II/Module 6/DT.rda")
+
+```
+
+
+```{r}
+str(dt)
+```
+```{r}
+head(dt)
+```
+```{r}
+ggplot(dt, aes(x = ofp)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  labs(title = "Histogram of Physician/Non-Physician Office Visits",
+       x = "Number of Visits",
+       y = "Frequency")
+```
+```{r}
+# Poisson Regression
+poisson_model <- glm(ofp ~ hosp + health + numchron + gender + school + privins, 
+                     data = dt, family = "poisson")
+summary(poisson_model)
+
+```
+```{r}
+# Hurdle Poisson Model
+hurdle_model <- hurdle(ofp ~ hosp + health + numchron + gender + school + privins, 
+                       data = dt, dist = "poisson")
+summary(hurdle_model)
+
+```
+```{r}
+# Zero-Inflated Poisson Regression
+ZIP_model <- zeroinfl(ofp ~ hosp + health + numchron + gender + school + privins, 
+                      data = dt, dist = "poisson")
+summary(ZIP_model)
+```
+Answer:
+Given the nature of the dataset, we should consider statistical models suitable 
+for count data with potential excess zeros.
+
+Poisson Regression is suitable for count data with variance approximately equal 
+to the mean and no excess zeros.
+
+Hurdle Poisson Model is appropriate when there's an excess of zeros, separating 
+the process of generating zeros from non-zero counts.
+
+Zero-Inflated Poisson Model is Useful for data with excess zeros, distinguishing 
+between true zeros and excess zeros.
+
+(b) Fit the models you indicated in part (a), using the identical set of explanatory 
+variables in each, and report the AIC for each.
+
+```{r}
+poisson_aic <- AIC(poisson_model)
+poisson_bic <- BIC(poisson_model)
+ZIP_model_aic <- AIC(ZIP_model)
+ZIP_model_bic <- BIC(ZIP_model)
+hurdle_aic <- AIC(hurdle_model)
+hurdle_bic <- BIC(hurdle_model)
+```
+
+```{r}
+data.frame(Model = c("Poisson", "Zero-Inflated Poisson", "Hurdle Poisson"),
+           AIC = c(poisson_aic, ZIP_model_aic, hurdle_aic),
+           BIC = c(poisson_bic, ZIP_model_bic, hurdle_bic))
+```
+
+(c) Based on parts (a) and (b) and considering interpretation of the models in the context of the data,
+write a sentence summarizing your findings in terms of which model seems most appropriate for
+these data.
+
+Answer:
+Zero-Inflated Poisson Poisson model is the most suitable choice due to its lower 
+AIC and BIC values compared to other models.
+
+
+2. (5 points) For each of the following response variables, indicate whether a 
+zero-inflated model or a hurdle model would be more appropriate. Justify your 
+answer by providing possible processes responsible for generating the excess zeros 
+and the counts that correspond to the model. There may not be a clear answer for 
+you, so simply pick one and try to justify it.
+(a) School administrators study the attendance behavior of high school juniors 
+and take the number of days absent as the response variable.
+
+Answer:
+A hurdle model model is more appropriate for studying high school 
+juniors' attendance behavior.
+
+There will be excess zero.The reasons like attendance is sick and other
+factors could contributes to excess zero.
+
+Also, the number of days students are absent is another consideration.
+
+
+(b) Wildlife biologists want to model how many fish are being caught by fishermen 
+at a state park. All park visitors are asked how many fish they caught.
+
+Answer:
+A zero-inflated model seems good fit for modeling the number of fish are caught
+by fishermen at a state park.
+
+Excess Zeros: Not all park visitors are fishermen. Also, other factors
+like years experience in fishing, equipment quality and environmental 
+conditions will have impact on fishing get caught or not.
+
+Count Process: The count process corresponds to the number of fish
+caught by fisherman.
+
+Therefore, a zero-inflated model is more suitable because it has 2 distinct 
+processes: 
+1) One determines whether a fish is caught at all
+2) They catch at least one fish
+
+
+
+(c) Researchers are interested in creating a stock trading model for investors. 
+The response is trades per week made by each investor.
+
+Answer:
+For modeling trades per week by invested, a zero-inflated model is
+the best one.
+
+Excess Zeros: Not many daily stock trades. It might related to market 
+condition, personal time and personal strategies
+
+Count Process: The model will capture both weeks without trade and the
+number of trades per week for active investor.
+
+
+(d) Researchers want to create a model for loan defaults. They take the number 
+of outstanding payments that exist for each of a random sample of loans.
+
+Answer:
+For modeling loan defaults based on the number of outstanding payments, 
+a hurdle model would likely be more appropriate.
+
+Excess Zero: The excess zero could arise since not all loans are default.
+Some payments repaid without defaults; some payments maybe not able to repaid 
+due to financial situation.
+
+Count Process: The model capture both the presence of loans without 
+defaults and the number of outstanding payments for defaulted loans.
+
+

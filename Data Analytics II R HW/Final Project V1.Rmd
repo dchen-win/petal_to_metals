@@ -1,0 +1,415 @@
+---
+title: "ST518 Final Project"
+author: "Cindy Chenr"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r, message=FALSE, warning=FALSE}
+library("MASS")
+library("ordinal")
+library("nnet")
+library("questionr")
+library(utils)
+library(ggplot2)
+library(corrplot)
+library(dplyr)
+library(tidyverse)
+```
+
+# Executive Summary:
+
+Barry Becker meticulously assembled a dataset sourced from the 1994 Census database, 
+adhering to specific criteria concerning age, income, and work hours, sex and other
+factors. This dataset serves as a foundational resource for exploring the 
+intricate dynamics of income distribution within the population.
+
+The primary inquiry propelling this analysis revolves around identifying the 
+pivotal determinants influencing income disparities within the dataset. By 
+unraveling the underlying factors contributing to income discrepancies, 
+people can glean invaluable insights to inform strategic decisions and policies 
+aimed at addressing income inequality and promoting socioeconomic advancement.
+
+Central to the dataset is the response variable 'Income', serving as the 
+cornerstone for classifying individuals into two distinct categories: those earning 
+greater than $50K annually (represented by 1), and those earning less or equal to
+$50K (represented by 0).
+
+In initial inquiry, the question of interest is whether higher levels of 
+education corresponded with elevated income levels. Following an extensive 
+exploratory analysis, it reveals a discernible positive correlation between 
+educational attainment and income.
+
+At the heart of this analysis lies the objective of predicting income levels 
+categorized as either above or below $50,000 per year, utilizing binomial logistic 
+regression as the primary analytical tool. This statistical methodology enables 
+us to model the likelihood of an individual's income surpassing the specified 
+threshold, based on an array of predictor variables.
+
+In summary, this study delves deep into the nuances of income distribution within 
+the population, leveraging a rich dataset curated by Barry Becker. By addressing 
+the questions surrounding income inequality, it furnishes supervisors with 
+substantive insights and recommendations to foster a more equitable socioeconomic 
+landscape. Through rigorous analysis and interpretation, we endeavor to illuminate 
+pathways toward a more inclusive and prosperous society.
+
+
+
+# Body
+
+* Data cleaning and exploration 
+  We conducted a thorough examination to identify and rectify any instances of 
+  duplicate or missing data within the dataset. Additionally, we swiftly examined 
+  the patterns and distributions of both independent and dependent variables to 
+  glean insights crucial for informed decision-making.
+  
+* Data attributes description
+  1) age -- The age of the individual.  
+  2) workclass -- The type of employer the individual has. Whether they are government, 
+     military, private, etc.   
+  3) fnlwgt -- The number of people the census takers believe that observation 
+     represents. We will be ignoring this variable.   
+  4) education -- The highest level of education achieved for that individual.  
+  5) education_num -- Highest level of education in numerical form  
+  6) marital -- Marital status of the individual occupation -- The occupation of 
+     the individual  
+  7) relationship -- family relationship values like husband, father, and so on, 
+     but only contains one per     observation   
+  8) race -- descriptions of the individuals race. Black, White, Eskimo, etc. 
+  9) sex -- Biological Sex 
+  10) capital_gain -- Capital gains recorded  
+  11) capital_loss -- Capital Losses recorded  
+  12) hr_per_week -- Hours worked per week  
+  13) native_country -- Country of origin for person  
+  14) class - String form of "\<=50K" or "\>50K".  
+  15) above_50k -- Boolean Variable. Whether or not the person makes more than
+      $50,000 per year income. 
+  
+  
+* Research Questions:
+  1) Are there any notable patterns or relationships between education and 
+     income in the dataset?
+  2) How does income vary based on education level, occupation, and other 
+     demographic factors?
+* Summary 
+
+Q1:Relationship between Education and Income
+
+In examining the relationship between education levels and income, we observed 
+distinct patterns within the dataset. Individuals earning over $50k annually 
+predominantly possessed bachelor's, master's, or some college education. 
+Conversely, those earning below $50k were more likely to have a high school 
+diploma or lower educational attainment. This observation suggests a positive 
+correlation between education and income. However, it's essential to acknowledge 
+the limitations of this analysis, notably the dataset's size. Further investigation 
+is warranted to validate and expand upon these initial findings.
+
+Q2: Logistic Regression Model Evaluation
+
+The logistic regression model constructed in this analysis predicts the binary 
+outcome of income based on several predictors, including education-num, marital 
+status, occupation, hours-per-week, and age. Each predictor's coefficient signifies 
+its impact on the log odds of the response variable. The significance of these 
+predictors is determined by their respective p-values, with lower values indicating 
+greater significance. Notably, all predictors exhibit high significance, suggesting 
+their importance in predicting income levels.
+
+Additionally, the model demonstrates a strong fit to the data, as evidenced by 
+low residual deviance and AIC values. The accuracy metric, measuring the 
+proportion of correct predictions, stands at approximately 79.58%, indicating 
+satisfactory predictive performance. To enhance the model's accuracy further, 
+future iterations will incorporate additional factors such as sex and relationship 
+status. Nonetheless, it's imperative to recognize the study's limitations, 
+particularly regarding dataset size, necessitating further analysis to bolster 
+the model's robustness and generalizability.
+
+
+# Conslusions / Discussion
+
+The analysis undertaken in this study sheds light on the intricate relationship 
+between education and income, as well as the efficacy of the logistic regression 
+model in predicting income levels. However, it also underscores several avenues 
+for further exploration and improvement.
+
+The observed positive correlation between education levels and income provides 
+valuable insights into socioeconomic dynamics. Nonetheless, future analyses could 
+benefit from the inclusion of additional predictors not encompassed in the current 
+model. Variables such as sex and workclass merit consideration, as they may 
+contribute to a more nuanced understanding of income determinants and potentially 
+enhance the model's predictive power.
+
+Furthermore, the limitations imposed by the dataset's size emphasize the importance 
+of conducting further analyses with larger datasets. This expansion would not only 
+validate the trends identified in this study but also uncover additional insights 
+into income differentials.
+
+In conclusion, while this study lays a solid foundation for understanding income 
+inequality and informing policy interventions, it also serves as a springboard 
+for future research endeavors. By addressing the identified limitations and 
+incorporating additional factors, future studies can refine predictive models and 
+contribute to more robust solutions for addressing income inequality.
+
+
+## Data exploration and cleaning
+
+
+```{r}
+
+zip_file <- "C:/Users/15306/Desktop/ST 517 Data Analytics II/Final Project/adult.zip"
+
+unzip(zip_file, exdir = tempdir())
+
+data_file <- file.path(tempdir(), "adult.data")
+
+data_lines <- readLines(data_file)
+
+adult_data <- data.frame(do.call(rbind, strsplit(data_lines, ", ", fixed = TRUE)))
+
+
+str(adult_data)
+
+head(adult_data)
+
+```
+```{r}
+
+column_names <- c(
+  "age",
+  "workclass",
+  "fnlwgt",
+  "education",
+  "education-num",
+  "marital-status",
+  "occupation",
+  "relationship",
+  "race",
+  "sex",
+  "capital-gain",
+  "capital-loss",
+  "hours-per-week",
+  "native-country",
+  "income"
+)
+
+column_names
+```
+```{r}
+names(adult_data) <- column_names
+head(adult_data)
+```
+
+```{r}
+summary(adult_data)
+```
+```{r}
+
+if (any(is.na(adult_data))) {
+  print("There are missing values in the dataset.")
+} else {
+  print("There are no missing values in the dataset.")
+}
+
+
+if (any(duplicated(adult_data))) {
+  print("There are duplicate rows in the dataset.")
+} else {
+  print("There are no duplicate rows in the dataset.")
+}
+
+
+duplicate_rows <- adult_data[duplicated(adult_data), ]
+
+adult_data <- adult_data[!duplicated(adult_data), ]
+```
+
+
+## Question 1: Are there any notable patterns or relationships between education and income in the dataset?
+
+```{r}
+`marital-status` <- unique(adult_data$`marital-status`)
+print(`marital-status` )
+```
+```{r}
+
+marital_status <- c("Never-married" = 1, "Married-civ-spouse" = 2, "Divorced" = 3, 
+          "Married-spouse-absent" = 4, "Separated" = 5, "Married-AF-spouse" = 6, 
+                            "Widowed" = 7)
+
+
+adult_data$marital_status <- marital_status[adult_data$`marital-status`]
+
+
+head(adult_data$marital_status)
+
+```
+
+```{r}
+occupation <- unique(adult_data$occupation)
+print(occupation)
+```
+
+```{r}
+occupation<- c("Adm-clerical" = 1, "Exec-managerial" = 2, "Handlers-cleaners" = 3, 
+               "Prof-specialty" = 4, "Other-service" = 5, "Sales" = 6, 
+               "Craft-repair" = 7, "Transport-moving" = 8, "Farming-fishing" = 9, 
+               "Machine-op-inspct" = 10, "Tech-support" = 11, "?" = 12, 
+               "Protective-serv" = 13, "Armed-Forces" = 14, "Priv-house-serv" = 15)
+
+
+adult_data$occupation <- occupation[adult_data$occupation]
+
+str(adult_data)
+```
+
+
+
+```{r}
+# Convert numeric variables to numeric type
+adult_data$age <- as.numeric(adult_data$age)
+adult_data$fnlwgt <- as.numeric(adult_data$fnlwgt)
+adult_data$`education-num` <- as.numeric(adult_data$`education-num`)
+adult_data$`capital-gain` <- as.numeric(adult_data$`capital-gain`)
+adult_data$`capital-loss` <- as.numeric(adult_data$`capital-loss`)
+adult_data$education <- as.factor(adult_data$education)
+adult_data$`hours-per-week` <- as.numeric(adult_data$`hours-per-week`)
+
+str(adult_data)
+```
+
+
+```{r}
+numeric_data <- adult_data |> 
+  dplyr::select(age, fnlwgt, `education-num`, `capital-gain`, `capital-loss`, 
+                `hours-per-week`, marital_status, occupation)
+
+str(numeric_data)
+
+```
+
+
+```{r}
+
+cor_matrix <- cor(numeric_data)
+colnames(cor_matrix) <- c("age", "fnlwgt", "education-num", "capital-gain", 
+              "capital-loss", "hours-per-week", "marital_status", "occupation")
+rownames(cor_matrix) <- colnames(cor_matrix)
+
+corrplot(cor_matrix, method = "color", type = "full", tl.col = "black", tl.srt = 45)
+
+```
+
+
+```{r}
+describe(numeric_data)
+```
+```{r}
+
+str(numeric_data)
+summary(numeric_data)
+any(is.na(numeric_data))
+
+```
+
+
+```{r}
+ggplot(adult_data, aes(x = education, color = income, group = income)) + 
+  geom_line(stat = "count") +
+  ggtitle("Education by Income") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+
+
+## Question 2: How does income vary based on education level, occupation, and other demographic factors?
+
+```{r}
+head(adult_data)
+
+adult_data_q2 <- select(adult_data, `education-num`, marital_status, occupation, 
+                        `hours-per-week`, age, income)
+
+head(adult_data_q2)
+
+```
+```{r}
+adult_data_q2$income <- as.factor(adult_data_q2$income)
+adult_data_q2$income <- ifelse(adult_data_q2$income == ">50K", 1, 0)
+
+pca_result <- prcomp(adult_data_q2, scale.=TRUE)
+
+# Print PCA summary
+summary(pca_result)
+
+```
+
+
+
+
+
+```{r}
+
+X <- adult_data_q2 %>% select(-income)
+y <- adult_data_q2$income
+
+set.seed(123) 
+train_index <- sample(nrow(adult_data_q2), 0.8 * nrow(adult_data_q2))
+X_train <- X[train_index, ]
+y_train <- y[train_index]
+X_test <- X[-train_index, ]
+y_test <- y[-train_index]
+
+
+
+```
+
+
+
+```{r}
+logit_model <- glm(y_train ~ `education-num` + marital_status + occupation + 
+                  `hours-per-week` + age, data = X_train, family = binomial)
+
+predictions <- predict(logit_model, newdata = X_test, type = "response")
+predicted_classes <- ifelse(predictions > 0.5, 1, 0)
+summary(logit_model)
+
+```
+
+
+```{r}
+
+confusion_matrix <- table(y_test, predicted_classes)
+confusion_matrix
+confusion_df <- as.data.frame.matrix(confusion_matrix)
+colnames(confusion_df) <- c("0", "1")
+confusion_df <- cbind(True_Classes = rownames(confusion_df), confusion_df)
+melted_confusion <- reshape2::melt(confusion_df, id.vars = "True_Classes")
+
+heatmap <- ggplot(data = melted_confusion, aes(x = True_Classes, y = variable, 
+                                               fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = value), vjust = 1) +
+  scale_fill_gradient(low = "white", high = "blue") +  # Use continuous scale
+  labs(x = "True Classes", y = "Predicted Classes", title = "Confusion Matrix") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(heatmap)
+
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Accuracy:", accuracy))
+
+```
+
+
+
+
+## Appendices
+
+```{r}
+# Plot histograms for each attribute to show the distribution
+
+hist(adult_data_q2$marital_status, main = "Marital Status Histogram", xlab = "Marital Status", col = "salmon")
+hist(adult_data_q2$occupation, main = "Occupation Histogram", xlab = "Occupation", col = "lightgreen")
+hist(adult_data_q2$age, main = "Age Histogram", xlab = "Age", col = "lightpink")
+```
+

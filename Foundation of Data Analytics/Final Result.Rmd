@@ -1,0 +1,574 @@
+---
+title: "Final Product"
+author: Cindy Chen
+format: pdf
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+```{r}
+library(ggplot2)
+```
+
+```{r}
+yrbss_2007 <- readRDS("yrbss_2007.rds")
+yrbss_2007
+```
+
+```{r}
+yrbss_2017 <- readRDS("yrbss_2017.rds")
+yrbss_2017
+```
+
+```{r}
+# Task 1: Simulation Study 
+# a: Using repeated samples of size n = 10, 100, and 1000 from the bmi variable, describe the sampling distribution of the sample mean of BMI in 2017. Include at least one plot to help describe your results. Report the means and standard deviations of the sampling distributions, and describe how they change with increasing sample size.
+
+# Function to generate sampling distribution and print mean and standard deviation
+sampling_distribution <- function(sample_size, data) {
+  # Number of repeated samples
+  num_samples <- sample_size
+  
+  # Generate repeated samples and calculate sample means
+  sample_means <- replicate(num_samples, mean(sample(data$bmi, size = sample_size)))
+  
+  # Return the sampling distribution
+  return(sample_means)
+}
+
+
+```
+
+
+```{r}
+# Call the function with the appropriate dataset
+sample_means_10 <- sampling_distribution(10, yrbss_2017)
+head(sample_means_10)
+
+```
+```{r}
+# Check if sample_means_100 is a numeric vector
+if (is.numeric(sample_means_10)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_means_10), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = sample_means_10)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_means_10 is not a numeric vector
+  cat("Error: sample_means_10 is not a numeric vector.\n")
+}
+```
+
+
+
+```{r}
+# Check if sample_means_10 is a numeric vector
+if (is.numeric(sample_means_10)) {
+  # Create a simplified ggplot line chart
+  ggplot(data.frame(sample_means = sample_means_10), aes(x = sample_means)) +
+    geom_freqpoly(binwidth = 0.1, color = "blue") +
+    ggtitle("Sampling Distribution (n = 10)") +
+    xlab("Sample Mean of BMI") +
+    ylab("Count of Records") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_means_10 is not a numeric vector
+  cat("Error: sample_means_10 is not a numeric vector.\n")
+}
+
+
+```
+```{r}
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_means_10), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_means_10), 3), "\n\n")
+
+```
+
+```{r}
+# Call the function with the appropriate dataset
+sample_means_100 <- sampling_distribution(100,yrbss_2017)
+head(sample_means_100)
+```
+```{r}
+# Check if sample_means_100 is a numeric vector
+if (is.numeric(sample_means_100)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_means_100), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = sample_means_100)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_means_100 is not a numeric vector
+  cat("Error: sample_means_100 is not a numeric vector.\n")
+}
+
+```
+```{r}
+# Check if sample_means_10 is a numeric vector
+if (is.numeric(sample_means_100)) {
+  # Create a simplified ggplot line chart
+  ggplot(data.frame(sample_means = sample_means_100), aes(x = sample_means)) +
+    geom_freqpoly(binwidth = 0.1, color = "blue") +
+    ggtitle("Sampling Distribution (n = 10)") +
+    xlab("Sample Mean of BMI") +
+    ylab("Count of Records") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_means_100 is not a numeric vector
+  cat("Error: sample_means_100 is not a numeric vector.\n")
+}
+
+```
+
+```{r}
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_means_100), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_means_100), 3), "\n\n")
+
+```
+```{r}
+sample_means_1000 <- sampling_distribution(1000, yrbss_2017)
+head(sample_means_1000)
+
+```
+
+```{r}
+# Check if sample_means_100 is a numeric vector
+if (is.numeric(sample_means_1000)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_means_1000), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = sample_means_1000)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_means_1000 is not a numeric vector
+  cat("Error: sample_means_1000 is not a numeric vector.\n")
+}
+```
+```{r}
+# Check if sample_means_10 is a numeric vector
+if (is.numeric(sample_means_1000)) {
+  # Create a simplified ggplot line chart
+  ggplot(data.frame(sample_means = sample_means_1000), aes(x = sample_means)) +
+    geom_freqpoly(binwidth = 0.1, color = "blue") +
+    ggtitle("Sampling Distribution (n = 10)") +
+    xlab("Sample Mean of BMI") +
+    ylab("Count of Records") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_means_1000 is not a numeric vector
+  cat("Error: sample_means_1000 is not a numeric vector.\n")
+}
+```
+
+```{r}
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_means_1000), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_means_1000), 3), "\n\n")
+
+```
+
+
+
+
+```{r}
+# b: Repeat the simulation in part (a), but this time use the 25th percentile as 
+# the sample statistic. In R, quantile(x, prob = 0.25) will give you the 25th 
+# percentile of the values in x.
+# Function to generate sampling distribution and print mean and standard deviation
+sampling_distribution_quantile <- function(sample_size, data) {
+  # Number of repeated samples
+  num_samples <- sample_size
+  
+  # Generate repeated samples and calculate sample quantiles (25th percentile)
+  sample_quantiles <- as.vector(replicate(num_samples, quantile(sample(data$bmi, size = sample_size), probs = 0.25)))
+  
+  # Return the sampling distribution
+  return(sample_quantiles)
+}
+
+
+
+```
+
+
+
+```{r}
+# n = 10
+# Call the function and assign the result to a variable
+sample_quantiles_10 <- sampling_distribution_quantile(10, yrbss_2017)
+sample_quantiles_10
+
+```
+
+
+
+```{r}
+# Check if sample_quantiles_10 is a numeric vector
+if (is.numeric(sample_quantiles_10)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_quantiles_10), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = 10)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_quantiles_10 is not a numeric vector
+  cat("Error: sample_quantiles_10 is not a numeric vector.\n")
+}
+
+```
+```{r}
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_quantiles_10), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_quantiles_10), 3), "\n\n")
+```
+```{r}
+# n = 100
+# Call the function and assign the result to a variable
+sample_quantiles_100 <- sampling_distribution_quantile(100, yrbss_2017)
+head(sample_quantiles_100)
+
+```
+
+```{r}
+# Check if sample_means_1000 is a numeric vector
+if (is.numeric(sample_quantiles_100)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_quantiles_100), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = 100)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_quantiles_10 is not a numeric vector
+  cat("Error: sample_quantiles_10 is not a numeric vector.\n")
+}
+```
+
+```{r}
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_quantiles_100), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_quantiles_100), 3), "\n\n")
+```
+```{r}
+# n = 1000
+# Call the function and assign the result to a variable
+sample_quantiles_1000 <- sampling_distribution_quantile(1000, yrbss_2017)
+head(sample_quantiles_1000)
+```
+
+```{r}
+# Check if sample_means_1000 is a numeric vector
+if (is.numeric(sample_quantiles_1000)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_quantiles_1000), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = 1000)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_quantiles_1000 is not a numeric vector
+  cat("Error: sample_quantiles_1000 is not a numeric vector.\n")
+}
+```
+
+```{r}
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_quantiles_1000), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_quantiles_1000), 3), "\n\n")
+```
+
+
+```{r}
+# C, Repeat the simulation in part (a), but this time use the sample minimum as the sample statistic.
+sampling_distribution_minimum <- function(sample_size, data) {
+  # Number of repeated samples
+  num_samples <- sample_size
+  
+  # Generate repeated samples and calculate sample minimums
+  sample_minimums <- replicate(num_samples, min(sample(data$bmi, size = sample_size)))
+  
+  # Return the sampling distribution of minimums
+  return(sample_minimums)
+}
+
+
+```
+
+```{r}
+sample_minimum_10 <- sampling_distribution_minimum(10, yrbss_2017)
+head(sample_minimum_10)
+```
+
+
+```{r}
+# Check if sample_means_100 is a numeric vector
+if (is.numeric(sample_minimum_10)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_minimum_10), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = sample_minimum_10)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_minimum_10 is not a numeric vector
+  cat("Error: sample_minimum_10 is not a numeric vector.\n")
+}
+```
+```{r}
+# Call the function with the appropriate dataset
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_minimum_10), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_minimum_10), 3), "\n\n")
+
+```
+```{r}
+sample_minimum_100 <- sampling_distribution_minimum(100, yrbss_2017)
+head(sample_minimum_100)
+```
+```{r}
+# Check if sample_means_100 is a numeric vector
+if (is.numeric(sample_minimum_100)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_minimum_100), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = sample_minimum_100)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_minimum_10 is not a numeric vector
+  cat("Error: sample_minimum_100 is not a numeric vector.\n")
+}
+```
+```{r}
+# Call the function with the appropriate dataset
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_minimum_100), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_minimum_100), 3), "\n\n")
+
+```
+```{r}
+sample_minimum_1000 <- sampling_distribution_minimum(1000, yrbss_2017)
+head(sample_minimum_1000)
+```
+```{r}
+# Check if sample_means_100 is a numeric vector
+if (is.numeric(sample_minimum_1000)) {
+  # Create a ggplot histogram with a smaller binwidth
+  ggplot() +
+    geom_histogram(aes(x = sample_minimum_1000), binwidth = 0.1, fill = "lightblue", color = "black") +  # Adjust binwidth here
+    ggtitle("Sampling Distribution (n = sample_minimum_1000)") +
+    xlab("Sample Mean of BMI") +
+    theme_minimal()
+} else {
+  # Handle the case where sample_minimum_1000 is not a numeric vector
+  cat("Error: sample_minimum_1000 is not a numeric vector.\n")
+}
+```
+
+```{r}
+# Call the function with the appropriate dataset
+# Print mean and standard deviation of the sampling distribution
+  cat("Mean of Sampling Distribution:", round(mean(sample_minimum_1000), 3), "\n")
+  cat("Standard Deviation of Sampling Distribution:", round(sd(sample_minimum_1000), 3), "\n\n")
+
+```
+```{r}
+# d, Describe the sampling distribution of the difference in the sample median 
+# BMI between 2017 and 2007, by using repeated samples of size n_1 = 5, n_2 = 5, 
+# n_1 = 10, n_2 = 10 and n_1 = 100, n_2 = 100. Report the means and standard 
+# deviations of the sampling distributions, and describe how they change with 
+# the different sample sizes.
+```
+
+```{r}
+# Function to generate sampling distribution and print mean and standard deviation
+sampling_distribution_median_diff <- function(sample_size_1, sample_size_2, data_2017, data_2007) {
+  # Number of repeated samples
+  num_samples <- 1000  # Adjust this based on your preference
+  
+  # Generate repeated samples and calculate sample medians
+  sample_medians_diff <- replicate(
+    num_samples,
+    median(sample(data_2017$bmi, size = sample_size_1)) -
+      median(sample(data_2007$bmi, size = sample_size_2))
+  )
+  
+  # Return the mean and standard deviation of the sampling distribution
+  return(c(mean = mean(sample_medians_diff), sd = sd(sample_medians_diff)))
+}
+
+
+```
+```{r}
+result_n5 <- sampling_distribution_median_diff(5, 5, yrbss_2017, yrbss_2007)
+result_n5
+```
+```{r}
+result_n10 <- sampling_distribution_median_diff(10, 10, yrbss_2017, yrbss_2007)
+result_n10
+```
+```{r}
+result_n100 <- sampling_distribution_median_diff(100, 100, yrbss_2017, yrbss_2007)
+result_n100
+
+
+```
+
+```{r}
+# e, Summarize your results.
+```
+
+
+```{r}
+
+```
+
+```{r}
+# Task 2: Data Analysis
+# How has the BMI of high-school students changed between 2007 and 2017? Are 
+# high-schoolers getting more overweight?
+
+```
+
+```{r}
+# Statistical Testing
+t_test_result <- t.test(yrbss_2007$bmi, yrbss_2017$bmi)
+print(t_test_result)
+
+```
+Conclusion: The result of the Welch Two Sample t-test indicates a statistically 
+significant difference in the mean BMI between high-school students in 2007 and 
+2017. The p-value of 0.01324 is less than the conventional significance level of 
+0.05, suggesting that we have evidence to reject the null hypothesis of equal means.
+
+The mean BMI in 2007 is around 23.78, while the mean BMI in 2017 is around 23.62. 
+The 95 percent confidence interval for the difference in means is (0.0325, 0.2786), 
+indicating that we can be 95 percent confident that the true difference in means 
+falls within this interval.
+
+Based on these results, we can infer that, on average, high-school students' BMI 
+has decreased slightly from 2007 to 2017. However, we will need to have more
+sample to approve our assumptions. Besides that, other factors like lifestyle, 
+diet, physical activity, and other relevant variables.contributing to weight 
+changes should be considered. 
+
+
+
+
+```{r}
+# In 2017, are 12th graders more or less likely than 9th graders to be “physically 
+# active at least 60 minutes per day on 5 or more days”?
+yrbss_2017_9th <- subset(yrbss_2017, grade == "9th")
+yrbss_2017_9th
+
+```
+
+```{r}
+yrbss_2017_12th <- subset(yrbss_2017, grade == "12th")
+yrbss_2017_12th
+```
+
+```{r}
+prop_9th <- mean(yrbss_2017_9th$qn79 == TRUE, na.rm = TRUE)
+prop_9th
+
+```
+
+```{r}
+prop_12th <- mean(yrbss_2017_12th$qn79 == TRUE, na.rm = TRUE)
+prop_12th
+```
+
+```{r}
+# Assuming your data frame is named 'yrbss_2017'
+# Replace 'qn79' with your actual column name indicating physical activity
+# Replace '9th' and '12th' with your actual grade level values
+
+# Subset the data
+yrbss_2017_9th <- subset(yrbss_2017, grade == "9th")
+yrbss_2017_12th <- subset(yrbss_2017, grade == "12th")
+
+# Calculate proportions
+prop_9th <- mean(yrbss_2017_9th$qn79 == TRUE, na.rm = TRUE)
+prop_12th <- mean(yrbss_2017_12th$qn79 == TRUE, na.rm = TRUE)
+
+# Calculate counts and totals
+count_9th <- sum(yrbss_2017_9th$qn79 == TRUE, na.rm = TRUE)
+count_12th <- sum(yrbss_2017_12th$qn79 == TRUE, na.rm = TRUE)
+
+total_9th <- nrow(yrbss_2017_9th)
+total_12th <- nrow(yrbss_2017_12th)
+
+# Calculate standard errors
+sd_9th <- sqrt(prop_9th * (1 - prop_9th) / total_9th)
+sd_12th <- sqrt(prop_12th * (1 - prop_12th) / total_12th)
+
+# Calculate the z-statistic
+z_stat <- (prop_9th - prop_12th) / sqrt(sd_9th^2 + sd_12th^2)
+
+# Two-tailed z-test
+p_value <- 2 * (1 - pnorm(abs(z_stat)))
+
+# Display results
+cat("Z-statistic:", z_stat, "\n")
+cat("P-value:", p_value, "\n")
+
+```
+Conclusions: The z-statistic of 10.62202 suggests a significant difference 
+between the observed proportion and the expected proportion under the null 
+hypothesis.
+
+Based on the result from z-test, there is strong evidence to reject the null 
+hypothesis. The observed difference in proportions is statistically significant.
+This implies that there is a significant difference in the proportion of 
+individuals meeting the criterion of being "physically active at least 60 minutes 
+per day on 5 or more days" between the groups being compared.
+
+
+```{r}
+# Subset for high school students
+highschool_data_2007 <- subset(yrbss_2007, grade %in% c("9th", "10th", "11th", "12th"))
+
+# Create a bar plot
+ggplot(data = highschool_data_2007, aes(x = q88)) +
+  geom_bar(fill = "lightblue", color = "black") +
+  labs(title = "Sleep Duration of High School Students in 2007",
+       x = "Hours of Sleep",
+       y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+# Subset for high school students
+highschool_data_2017 <- subset(yrbss_2017, grade %in% c("9th", "10th", "11th", "12th"))
+
+# Create a bar plot
+ggplot(data = highschool_data_2017, aes(x = q88)) +
+  geom_bar(fill = "lightblue", color = "black") +
+  labs(title = "Sleep Duration of High School Students in 2017",
+       x = "Hours of Sleep",
+       y = "Count") +
+  theme_minimal()
+```
+Conclusion:
+
+From the sleep duration of high school in 2007, it follow the normal distribution,
+7 hours has the more than 3000 record, 6 and 8 hours has around 2500 records.
+10 or more hours has the lowest number of records.
+
+From the sleep duration of high school in 2017, it follow the normal distribution,
+7 hours has around 3000 record, 6 hours has around 2800 records and 8 hours has 
+2000 records. 10 or more hours has the lowest number of records.
+
+Compare the result between 2007 and 2017, we found out that in 2017,
+the average sleeping hours is lower than in 2007. Expecially, 
+there are more students sleep less 4 or less hours. However, we need to have more
+sample size to approve our assumptions.

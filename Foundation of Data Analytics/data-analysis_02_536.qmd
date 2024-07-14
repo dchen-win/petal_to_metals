@@ -1,0 +1,171 @@
+---
+title: "436: Snow in the Cascades"
+author: Cindy Chen
+format: pdf
+---
+
+```{r, fig.show='hide'}
+#| include: false
+library(tidyverse)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Set the relative path to the zip file
+zip_path <- "data-analysis_02_536.zip"
+
+# Specify the relative path to the report CSV file within the zip archive
+csv_path <- "data-analysis_02_536/data/report.csv"
+
+# Specify target column names
+col_names <- c("station_name", "year", "day", "jan", "feb", "mar", "apr", 
+                      "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
+
+# Open a connection to the CSV file within the zip archive
+zip_connection <- unz(zip_path, csv_path)
+
+
+# Read the CSV file with the identified header row
+data <- read.table(zip_connection, skip = 58, 
+                   header = TRUE, col.names = col_names, sep = ",")
+
+# Display the data
+# head(data)
+
+
+
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Delete the first row of the datasets
+# Assuming 'data' is a data frame
+if (is.data.frame(data) && nrow(data) > 1) {
+  data <- data[-1, , drop = FALSE]
+} else {
+  warning("Data is not a data frame or has only one row.")
+}
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Reshape the data
+reshape_data <- data |> pivot_longer(cols = jan:dec, names_to = "month", 
+                                     values_to = "swe", 
+                                     names_repair = "minimal")
+reshape_data$swe = as.numeric(reshape_data$swe)
+#head(reshape_data)
+
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Filter data for days with missing values for swe
+missing_swe_days <- reshape_data |>
+  filter(is.na(swe))
+# tail(missing_swe_days)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Exclude missing values. Filter the data to examine the days with missing values 
+# for swe . Why are these days missing? Save a version of the data without any 
+# rows with missing values for swe to answer the remaining questions.
+not_missing_swe_days <- reshape_data |>
+  filter(!is.na(swe))
+# tail(not_missing_swe_days)
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+not_missing_swe_days <- not_missing_swe_days |>
+  filter(is.numeric(as.numeric(year))) |>
+  mutate(water_year = ifelse(month %in% c("oct", "nov", "dec"), as.numeric(year), 
+                             as.numeric(year) - 1))
+
+# not_missing_swe_days
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#Compute a peak snow summary. Group by water year and station, and then summarize 
+#to compute the maximum value of snow water equivalent.
+max_swe_data <- not_missing_swe_days |>
+  group_by(water_year,station_name)|>
+  summarise(
+    max_year_station_swe = max(swe, na.rm = TRUE),
+     .groups = 'keep'
+  )
+# max_swe_data
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Answer Question 1. Is there any change in the yearly peak amount of snow over 
+# the period 1992–2022?
+plot <- ggplot(max_swe_data, aes(x = water_year, y = max_year_station_swe, 
+                                 color = station_name)) +
+  geom_line() +
+  labs(title = "Max Snow Water Equivalent on water year from 1992 to 2022",
+       x = "Water Year",
+       y = "Max Snow Water Equivalent (in)") +
+  theme_minimal()
+
+# Show the plot
+print(plot)
+```
+```{r}
+# Conclusion: From the chart we could see that from year 1992 to 2022, the Max 
+# Snow Water Equivalent is volatile and has decreasing trend. However, we will 
+# need to have more datasets to approve my assumptions.
+# Moreover, in state name Hogg Pass has higher Max Snow Water Equivalent (in) 
+# than state name Santiam Jct from year 1992-2022.
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Answer Question 2. In the 2018 water year, how did the daily values of snow 
+# water equivalent compare between the two stations?
+
+library(flextable)
+
+# Assuming max_swe_data is your data frame
+water_year_2018 <- not_missing_swe_days |>
+  filter(water_year == 2018) |>
+  mutate(water_date = lubridate::ymd(paste(water_year, month, day, sep = "-"))) |>
+  arrange(water_date)
+# Plot daily snow water equivalent for both stations
+plot_2018 <- ggplot(water_year_2018, aes(x = water_date, y = swe, color = station_name)) +
+  geom_line() +
+  labs(title = "Daily Snow Water Equivalent for 2018",
+       x = "Water Date",
+       y = "Snow Water Equivalent (in)") +
+  theme_minimal()
+
+# Show the plot
+print(plot_2018)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Create a summary table with the first and last dates with non-zero values for 
+# snow water equivalent for each station
+library(flextable)
+summary_table <- water_year_2018 |>
+  filter(swe >0) |>
+  group_by(station_name) |>
+  summarise(
+    first_date_all_swe = min(water_date),
+    last_date_all_swe = max(water_date)
+  ) |>
+  flextable()
+
+# Print the summary table
+print(summary_table)
+```
+
+
+```{r}
+# Conclusion: From the line chart, in station Hogg Pass and Santiam Jct.we could 
+# see that from January to March, Snow Water Equivalent (in) has increasing trend; 
+# from March to May, swe has decreasing trend and almost become 0 from May to 
+# November. From November to December, swe has increasing trend again. In general, 
+# station Hogg Pass has higher swe than Santiam Jct.
+
+# For first and last dates with non-zero values in station Hogg Pass & Santiam 
+# Jct. is 2018-01-01 & 2018-12-31. 
+```
+
