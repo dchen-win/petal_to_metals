@@ -1,0 +1,204 @@
+---
+title: "Module 4 HW Submission"
+author: Cindy Chen
+output:
+  pdf_document:
+    latex_engine: xelatex 
+
+---
+
+1. (8 points) Consider the Sleuth3 dataset case0901, which contains the results of a study of the Meadowfoam plant. Familiarize yourself with the study and load the data.
+
+
+
+```{r}
+library(Sleuth3)
+#?case0901
+#case0901
+head(case0901)
+```
+
+(a) Create plots of the response variable Flowers against each of the explanatory variables Time and
+Intensity (provide only your code). Do you think the late (= 1) or early (= 2) start time of light
+intensity regiments led to greater average number of flowers per meadowfoam plant? Do you think
+flower abundance increased or decreased as the light intensity treatment increased?
+
+```{r}
+library(ggplot2)
+
+ggplot(case0901, aes(x = Intensity, y = Flowers, color = factor(Time))) +
+  geom_point() +
+  labs(title = "Time, Intensity vs. Flowers",
+       x = "Intensity",
+       y = "Flowers")
+
+```
+
+
+Answer: From the chart, we could make a conclusion that late (= 1) or early (= 2) 
+start time of light intensity regiments led to greater average number of flowers 
+per meadowfoam plant.when intensity increases,it leds to less average number of flowers per 
+meadowfoam plant. However, we will need to have more datasets to approve our 
+assumptions.
+
+
+b) Write out the the multiple linear regression model in statistical notation, where Flowers is the
+response, and Time and Intensity are the explanatory variables. Give the assumed distribution
+of the is. Then fit the model with lm(), and give ˆσ.  Note: the Time term should be an indicator
+variable; you accomplish this in R by making it a factor.
+
+```{r}
+MLB_fit <- lm(Flowers ~ factor(Time) + Intensity, data = case0901)
+MLB_fit
+```
+```{r}
+summary_results <- summary(MLB_fit)
+summary_results
+```
+```{r}
+p_values <- summary_results$coefficients[, "Pr(>|t|)"]
+p_values
+```
+
+
+c) pose we fit a model with an interaction term. In non-technical terms what will the interaction
+coefficient tell us? Suppose we fit separate models for “Time = 1” and “Time = 2” observations;
+what would we see if the interaction from the full model (which includes Time) is statistically
+significant?
+
+Answer:
+In non-technical terms, the interaction coefficient in a model with an interaction term is that
+whether the effect of one variable depends on the level of another variable. In the MLB_fit model, 
+it indicates that whether the effect of 'Intensity' on 'Flowers' is different from
+'Time' on 'Flowers'.
+
+When we fit separate models for “Time = 1” and “Time = 2” observations and interaction term from 
+the full model is significant, we will have different coefficients for the 'Intensity' variable in
+these separate models. It shows that the relationship between 'Intensity' and 'Flowers' is different
+for the two level of 'Time'.
+
+
+
+(d) Give the model that includes an interaction term, and then fit it. Give the p-value from the test of
+this term’s significance. What do you conclude?
+
+```{r}
+MLB_fit_V1 <- lm(Flowers ~ factor(Time) * Intensity, data = case0901)
+MLB_fit_V1
+```
+```{r}
+summary_results_v1 <- summary(MLB_fit_V1)
+summary_results_v1
+```
+```{r}
+p_values_v1 <- summary_results_v1$coefficients[, "Pr(>|t|)"]
+p_values_v1
+```
+Answer:
+
+Intercept: The intercept is significantly different from 0, suggesting that there is a significant effect 
+when both 'factor(Time)' and 'Intensity' are zero.
+
+factor(Time)2: The p-value is approximately 0.075 > 0.05. This suggests that the effect of factor(Time) 
+at level 2 is not statistically significant.
+
+Intensity: The p-value is very small, indicating that Intensity has a significant effect on the response.
+
+factor(Time)2:Intensity: The interaction term's p-value is 0.909 > 0.05. This suggests that the interaction 
+between factor(Time) and Intensity is not statistically significant.
+
+In summary, the interaction term doesn't seem to have a significant effect on the response because of 
+the high p-value.
+
+
+2. (2 points) Now suppose a graduate student in your department tells you he has three observations (table
+below) he forgot to include in the original dataset.
+Obs. # Flowers Time Intensity
+25 80 2 150
+26 80 2 900
+27 40 2 1200
+You can add these observations to your data with:
+case0901_updated <- rbind(case0901,
+data.frame(Flowers = c(80, 80, 40),
+Time = c(2, 2, 2),
+Intensity = c(150, 900, 1200)))
+
+
+(a) Create a “Flowers vs. Intensity” plot of the new 27 observation dataset.
+
+```{r}
+case0901_updated <- rbind(case0901,
+data.frame(Flowers = c(80, 80, 40),
+Time = c(2, 2, 2),
+Intensity = c(150, 900, 1200)))
+```
+
+```{r}
+head(case0901_updated)
+```
+
+
+```{r}
+ggplot(case0901_updated, aes(x = Intensity, y = Flowers, color = factor(Time))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Intensity vs. Flowers",
+       x = "Intensity",
+       y = "Flowers")
+
+```
+
+(b) Of these three new observations, which has the greatest leverage? Explain why in non-technical
+terms, referencing the Flowers vs. Intensity plot.
+
+```{r}
+MLB_fit_rbind <- lm(Flowers ~ factor(Time) + Intensity, data = case0901_updated)
+MLB_fit_rbind
+```
+
+
+```{r}
+leverage_values <- hatvalues(MLB_fit_rbind)
+case0901_updated$leverage <- leverage_values
+case0901_updated$leverage
+```
+
+Answer:
+In non-technical terms, leverage refers to the influence or impact that data points has on the shape
+of the regression line. From the chart, we can see that  Intensity = 1200, Time = 2, and Flowers = 40
+has the greatest leverage since it far away from the rest of the points and the line and it has a
+significant impact on the overall shape of the regression line.
+
+
+(c) Of these three new observations, which has the greatest Cook’s D statistic? Explain why in nontechnical terms, referencing the Flowers vs. Intensity plot.
+
+```{r}
+cooksd <- cooks.distance(MLB_fit_rbind)
+
+case0901_updated$cooksd <- cooksd
+
+print(case0901_updated$cooksd)
+
+```
+
+Answer: 
+Cook's D measures the influence of each observation on the regression coefficients.It used to identify
+influential data points get removed, it would significantly change the estimated regression coefficients.
+
+From the result and chart, the observation with flowers=80, time=2 and intensity=900 having the greatest 
+Cook's D statistics, it suggests that this data points has a great impact on the estimated coefficients
+of the regression model. In the chart, it shows the observation is an outlier and if remove, it could
+potential lead to notable change.
+
+
+
+
+(d) Of these three new observations, which has neither the greatest leverage nor the greatest Cook’s
+D? Explain why in non-technical terms, referencing the Flowers vs. Intensity plot.
+
+Answer:
+In non-technical terms, the observation Intensity = 150, Time = 2, and Flowers = 80 has neither the 
+greatest leverage nor the greatest Cook’s D because its position in the Flowers vs. Intensity plot 
+doesn't stand out significantly compared to other points. If we remove it, it wouldn't cause a 
+substantial change in the model.
+

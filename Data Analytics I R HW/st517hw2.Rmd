@@ -1,0 +1,176 @@
+---
+title: "ST517-HW1"
+author: Cindy Chen
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+
+1. (3 points) (Adapted from Exercise 21, Section 6.7, The Statistical Sleuth, 2nd Ed.) The dataset
+bearings.csv contains failure times (measured in millions of cycles) of engine bearings made from five
+different compounds.
+
+(a) (1 point) Read in the data. What type of data object is bearings? With ggplot2, create side-by-
+side boxplots of the failure times by compound.
+
+```{r 1(a)}
+
+bearings <- read.csv('bearings.csv')
+head(bearings)
+```
+```{r}
+class(bearings)
+```
+The data object is data.frame.
+
+```{r}
+ggplot(bearings, aes(x = Compound, y = Time)) +
+  geom_boxplot() +
+  labs(title = "Failure Times by Comound",
+      x = "Compound",
+      y = "Time")
+
+```
+
+(b) (2 points) Determine the pairs of engine ball bearing compounds for which there is a significant
+difference in mean failure times. Present your findings in a short statistical report (≈ 4 sentences).
+
+$$H_0: All \ the \ group \ means \ are \ equal $$
+
+$$H_1: At \ least \ one \ group \ mean \ is \ not 
+\ equal $$
+
+```{r 1(b)}
+
+# Perform one-way ANOVA
+anova_result <- oneway.test(Time ~ Compound, data = bearings)
+# Extract F-statistic and p-value
+F_statistic <- anova_result$statistic
+p_value <- anova_result$p.value
+
+# Display the results
+cat("F-statistic:", F_statistic, "\n")
+cat("P-value:", p_value, "\n")
+
+# Perform Turkey-Kramer test for multiple comparisons
+tukey_result <- TukeyHSD(aov(Time ~ Compound, data = bearings))
+head(tukey_result)
+```
+Answer:
+
+F-statistic: The F-statistic is 5.845 which suggests that there is significant variability in the mean failure time by compounds.
+
+P-value: The p values is 0.002293347 which is less than 0.05. It provides evidence to reject the null hypo that all group means are equal.
+
+In the pairwise comparisons, the "diff" column represents the estimated mean diff between the groups, and 'lwr' and 'upr' provide the lower and upper bounds of the 95% confidence for the difference.
+
+In each pairwise comparison in the Compound variable, V-II, V-III's  P value is suggesting evidence of a significant difference; other pairwise comparisons are not strong evidence of a significant difference.
+
+
+2. (3 points) Using the data from the last weeks lab and homework, case0501 in the Sleuth3, answer the
+question “Which diets differ in their mean lifetime?”
+
+```{r 2}
+library(Sleuth3)
+data(case0501)
+# Explore the data
+head(case0501)
+
+
+```
+$$H_0: There \ are \ no \ differences  \ between \ the \ diets \ in \ their \ effect \ on \ lifetime.$$
+$$H_1: There \ are \ differences  \ between \ the \ diets \ in \ their \ effect \ on \ lifetime.$$
+
+```{r}
+# Perform one-way ANOVA
+anova_result <- oneway.test(Lifetime ~ Diet, data = case0501)
+# Extract F-statistic and p-value
+F_statistic <- anova_result$statistic
+p_value <- anova_result$p.value
+
+# Display the results
+cat("F-statistic:", F_statistic, "\n")
+cat("P-value:", p_value, "\n")
+
+# Perform Turkey-Kramer test for multiple comparisons
+tukey_result <- TukeyHSD(aov(Lifetime ~ Diet, data = case0501))
+print(tukey_result)
+```
+Answer:
+
+From the Anova result:
+F-statistic: 64.72632
+P-value: 1.786316e-36
+
+The low p-value suggestions strong evidence aganist the null hypo that all the dies groups have equal mean lifetimes.
+
+Tukey's HSD test:
+The results of Tukey's HSD test provide pairwise comparisons between different diet groups, confidence intervals and ajusted p-values.
+Diets with adjusted p-values less than 0.05 are considered significantly different.
+
+From the result we could make a conclusison that:
+Diets N/R40, N/R50, NP, R/R50, and lopro have significantly different mean lifetimes compared to N/N85 based on adjusted p-values less than 0.05; 
+
+Diets NP-N has significantly different mean lifetimes compared to N/R40 based on adjusted p-values less than 0.05;
+
+Diets NP has significantly different mean lifetimes compared to N/R50 based on adjusted p-values less than 0.05;
+
+Diets R/R50, lopro have significantly different mean lifetimes compared to NP based on adjusted p-values less than 0.05.
+
+
+
+3. (2 points) A soda company is developing a new soda. They are tying to determine how much sugar to
+put in it to give it the best taste. In order to evaluate this, they have made samples with ten different
+sugar levels. Each level of sugar is a assigned to a random sample of seven people, and each person rates
+the soda on a scale from 0 to 10. The company would like to make inference on the difference between
+mean ratings between each pair of sugar level.
+
+(a) How many pairwise comparisons are there?
+
+```{r 3(a)}
+10 * 9 / 2 
+```
+
+(b) Name 2 procedures that the company could use to control the familywise Type I error rate on the
+differences of means? Explain.
+
+Answer:
+Bonferroni Correction:
+It adjusts the significance level for individual comparison though diving the overall significance level and the number of comparisons.
+It also ensures the probability at lease on Type I error below the desired level.
+
+Tukey-Karmer Procedure:
+It provides simultaneous confidence intervals for pairwise differences and consider variations in sample sizes.
+
+It adapts the significance level based on group numbers and sample size, provide balance between controlling errors and avoiding consevatisum.
+
+
+
+
+
+4. (2 points) A consumer research group names seven types of department stores. They take a random
+sample of six department stores for each type and record their yearly sales. They wish to find significant
+pairwise differences in mean yearly sales for seven types of stores.
+
+(a) How many pairwise comparisons are there?
+
+```{r 4(a)}
+7 * 6 / 2 
+```
+
+(b) The group wishes to control the familywise Type I error rate at 1% using Bonferroni methods.
+What should be the Type I error rate of each pairwise comparison?
+
+```{r 4(b)}
+familywise_error_rate <- 0.01
+pairwise_comparisons <- 21
+type_i_error_rate_per_comparison <- familywise_error_rate / pairwise_comparisons
+type_i_error_rate_per_comparison
+```
+Answer: The type i error rate per comparison is 0.0004761905.

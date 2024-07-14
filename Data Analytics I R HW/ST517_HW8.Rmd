@@ -1,0 +1,458 @@
+---
+title: "Module 8 HW Submission"
+author: Cindy Chen
+output:
+  pdf_document:
+    latex_engine: xelatex 
+---
+
+1. (2 points) (ISLR 2.4 Exercise #1, page 52) For each of the following parts, indicate whether we would
+generally expect the performance of a flexible statistical learning method to be better or worse than an
+inflexible method. Justify your answers.
+
+(a) The sample size n is extremely large, and the number of predictors p is small.
+
+Answer: In generally, the performance of a flexible statistical learning method
+is better than an inflexible method.
+
+The reason why is that in this scenario a flexible method can take advantage of 
+the large amount of data to fit a more complex model that captures the underlying 
+patterns in the data. 
+
+(b) The number of predictors p is extremely large, and the number of observations n is small.
+
+Answer: In generally, the performance of a flexible statistical learning method
+is worse than an inflexible method.
+
+The reason why is that a flexible method may overfit the data by fitting a model 
+that is too complex and captures noise rather than the underlying patterns in the data.
+
+
+(c) The relationship between the predictors and response is highly non-linear.
+
+Answer: The performance of a flexible statistical learning method to be better 
+than an inflexible method.
+
+The reason why is that a flexible method can capture the non-linear patterns in 
+the data more effectively than an inflexible method.
+
+
+(d) The variance of the error terms, i.e., σ2 = Var(e), is extremely high.
+
+Answer: The performance of a flexible statistical learning method to be worse 
+than an inflexible method.
+
+A flexible method may be overfitting the data by fitting a model that captures the noise 
+rather than the underlying patterns in the data. 
+
+
+2. (4 points) (ISLR 5.4 Exercise #8, page 201) We will now perform cross-validation on a simulated dataset.
+(a) Generate a simulated data set as follows:
+set.seed(1)
+x <- rnorm(100)
+y <- x - 2*x^2 + rnorm(100)
+In this data set, what is n and what is p? Write out the model used to generate the data in equation
+form.
+
+Answer: 'n' is the number of observations which is 100; 'p' is the number of
+predictors which is 1.
+
+The equation form is: 
+
+$$ y = x - 2x^2 + \epsilon $$
+(b) Create a scatter plot of X against Y using the data you generated above. Comment on what you
+see.
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y<- x- 2*x^2 + rnorm(100)
+plot(x, y, main = "The relationship between x and y", xlab = "X", ylab = "Y")
+
+```
+
+
+(c) Set a random seed, and then compute the leave-one-out cross-validation (LOOCV) errors that result
+from fitting the following four models using least squares:
+• Y = β0 + β1X + e
+• Y = β0 + β1X + β2X2 + e
+• Y = β0 + β1X + β2X2 + β3X3 + e
+• Y = β0 + β1X + β2X2 + β3X3 + β4X4 + e
+Note that you may find it helpful to use the data.frame() function to create a single data set
+containing both X and Y .
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y<- x- 2*x^2 + rnorm(100)
+data <- data.frame(x, y)
+
+```
+
+```{r}
+model1 <- lm(y ~ x, data = data)
+model2 <- lm(y ~ x + I(x^2), data = data)
+model3 <- lm(y ~ x + I(x^2) + I(x^3), data = data)
+model4 <- lm(y ~ x + I(x^2) + I(x^3) + I(x^4), data = data)
+
+```
+
+```{r}
+cv_error1 <- mean((y - predict(model1, data))^2)
+cv_error2 <- mean((y - predict(model2, data))^2)
+cv_error3 <- mean((y - predict(model3, data))^2)
+cv_error4 <- mean((y - predict(model4, data))^2)
+```
+
+```{r}
+print(cv_error1)
+print(cv_error2)
+print(cv_error3)
+print(cv_error4)
+```
+
+
+(d) Repeat (c) using another random seed, and report your results. Are your results the same as what
+you got in (c)? Why or why not?
+
+```{r}
+set.seed(2)
+x_1 <- rnorm(100)
+y_1 <- x_1- 2*x_1^2 + rnorm(100)
+data_1 <- data.frame(x_1, y_1)
+```
+
+```{r}
+model1_1 <- lm(y_1 ~ x_1, data = data_1)
+model2_1 <- lm(y_1 ~ x_1 + I(x_1^2), data = data_1)
+model3_1 <- lm(y_1 ~ x_1 + I(x_1^2) + I(x_1^3), data = data_1)
+model4_1 <- lm(y_1 ~ x_1 + I(x_1^2) + I(x_1^3) + I(x_1^4), data = data_1)
+```
+
+```{r}
+cv_error1_1 <- mean((y_1 - predict(model1_1, data_1))^2)
+cv_error2_1 <- mean((y_1 - predict(model2_1, data_1))^2)
+cv_error3_1 <- mean((y_1 - predict(model3_1, data_1))^2)
+cv_error4_1 <- mean((y_1 - predict(model4_1, data_1))^2)
+```
+
+```{r}
+print(cv_error1_1)
+print(cv_error2_1)
+print(cv_error3_1)
+print(cv_error4_1)
+```
+Answer:
+From the result, we get different LOOCV errors compared to the results from part 
+(c). The reason why is the LOOCV errors depend on the random seen used to generate
+the data. By having different random seed, the random different set numbers will 
+leads to different LOOCV errors. From the result, we can the first model which is
+single linear regression model is too simple and not the best model to interpret 
+the relationship between independent variable and dependent variable. The second, 
+third, fourth models have much lower LOOCV values but the forth model appear the
+lowest. Therefore, we could make a conclusion that the fourth model might be the
+best performance model.
+
+
+(e) Which of the models in (c) had the smallest LOOCV error? Is this what you expected? Explain
+your answer.
+
+Answer: LOOCV stands for Leave-One-Out Cross-Validation and the values is the less
+the better. From the reported errors, it appears that Model 4 has the smallest
+LOOCV error of 0.8737907. It means that the best predictive performance is model
+4. 
+I was expected model 1 since it is simple model and have less chance to be overfitting
+the data. However, the LOOCV error for Model 1 is much larger than the LOOCV 
+errors for Models 2, 3, and 4. It suggests that the true relationship between 
+the predictors and the response variable is more complex than a simple linear or 
+quadratic relationship, and Models 2, 3, and 4.
+
+
+(f) Comment on the statistical significance of the coefficient estimates that results from fitting each of
+the models in (c) using least squares. Do these results agree with the conclusions drawn based on
+the cross-validation results?
+
+```{r}
+# Calculate P values for model 1
+p_value_model1 <- anova(model1)$'Pr(>F)'[1]
+p_value_model1
+```
+```{r}
+p_value_model2 <- anova(model2)$'Pr(>F)'[1]
+p_value_model2
+```
+```{r}
+p_value_model3 <- anova(model3)$'Pr(>F)'[1]
+p_value_model3
+```
+```{r}
+p_value_model4 <- anova(model4)$'Pr(>F)'[1]
+p_value_model4
+```
+
+Answer:
+Model 1: LOOCV error = 6.625504, p-value = 0.01923846
+Model 2: LOOCV error = 0.8902911, p-value = 4.18481e-09
+Model 3: LOOCV error = 0.8895936, p-value = 4.971565e-09
+Model 4: LOOCV error = 0.8737907, p-value = 4.590732e-09
+
+From the result, we can see that all 4 models have statistically significant p-values
+for the ANOVA F-tests which means they all statistically significant. However, the
+LOOCV errors for Model 2,3,4 are smaller than the LOOCV error for Model 1, 
+suggesting that Models 2, 3, and 4 have better predictive performance than Model 
+1. Therefore, the result of the results of the ANOVA F-tests and the LOOCV errors 
+are consistent in indicating that Models 2, 3, and 4 have better predictive 
+performance than Model 1.
+
+3. (4 points) (Based on ISLR 6.8 Exercise #11, page 264 — Predicting crime rates in Boston data.)
+The Boston data set is in the MASS package, you’ll need to load that first.
+1
+library(MASS)
+?Boston
+head(Boston)
+Your job is to build a regression model to predict the crime rate (crim) in Boston suburbs based on the
+other provided variables.
+Your solution should include:
+• A brief exploratory analysis (some summary statistics, and a few plots of any obvious relationships).
+• A description of the set of regression models you considered.
+• A description of how the models were evaluated.
+• A summary of one (or a few) models that based on your analysis are the best among those you
+considered.
+
+```{r}
+library(MASS)
+?Boston
+head(Boston)
+```
+```{r}
+# Provide summary of Boston
+summary(Boston)
+```
+```{r}
+# Plot scatter plot to show the relationship between rm and crim
+plot(Boston$rm, Boston$crim, xlab = "Average Number of Rooms", ylab = "Crime Rate")
+
+```
+```{r}
+# Plot scatter plot to show the relationship between lsat and crim
+plot(Boston$lstat, Boston$crim, xlab = "Percentage of Lower Status Population", ylab = "Crime Rate")
+```
+
+
+
+```{r}
+# Create a correlation metric
+cor_matrix <- cor(Boston)
+cor_matrix
+
+```
+```{r}
+#install.packages("corrplot")
+```
+
+```{r}
+# Create a correlation metric chart
+library(corrplot)
+
+cor_matrix <- cor(Boston)
+
+
+corrplot(cor_matrix, method = 'square', col = colorRampPalette(c("darkblue", "white", "darkred"))(100))
+```
+```{r}
+# Simple linear regression model to show the relationship between rad and crim
+
+model_slr_rad <- lm(crim ~ rad, data = Boston)
+summary(model_slr_rad)
+
+```
+```{r}
+# Calculate AIC, BIC values for model_slr_rad
+AIC_value_slr_rad <- AIC(model_slr_rad)
+BIC_value_slr_rad <- BIC(model_slr_rad)
+
+print(paste("AIC:", AIC_value_slr_rad))
+print(paste("BIC:", BIC_value_slr_rad))
+```
+
+```{r}
+model_slr_tax <- lm(crim ~ tax, data = Boston)
+summary(model_slr_tax)
+```
+
+
+
+```{r}
+# Calculate AIC, BIC values for model_slr_tax
+AIC_value_slr_tax <- AIC(model_slr_tax)
+BIC_value_slr_tax <- BIC(model_slr_tax)
+
+print(paste("AIC:", AIC_value_slr_tax))
+print(paste("BIC:", BIC_value_slr_tax))
+```
+
+Answer:
+I use simple linear regression to see the relationship between single independent
+variable and dependent variable. The first model is to test the relationship 
+between rad and crim; the second model is to test the relationship between tax 
+and crim. From the p values are the same in both model which is 2.2e-16, we could
+make a conclusion that the model is statistically significant. The coefficients
+in the first model is much higher than the second one which means rad has higher
+coefficient typically means that the corresponding predictor variable rad 
+has a stronger effect on the response variable than tax.
+
+
+
+```{r}
+# Multiple linear regression model for all the independent variables
+model_mlr <- lm(crim ~ factor(rad) + tax + lstat + indus + medv + zn + chas 
+                + nox + rm + age + dis, data = Boston)
+summary(model_mlr)
+```
+```{r}
+# Calculate AIC, BIC values
+AIC_value_mlr <- AIC(model_mlr)
+BIC_value_mlr <- BIC(model_mlr)
+
+print(paste("AIC:", AIC_value_mlr))
+print(paste("BIC:", BIC_value_mlr))
+```
+
+# correlation is not causition but the relationship is further investingation
+
+
+```{r}
+# Multiple linear regression model update for different combinations
+model_mlr_v1 <- lm(crim ~ lstat +  medv + zn + dis, data = Boston)
+summary(model_mlr_v1)
+```
+```{r}
+# Calculate AIC, BIC values
+AIC_value_mlr_v1 <- AIC(model_mlr_v1)
+BIC_value_mlr_v1 <- BIC(model_mlr_v1)
+
+print(paste("AIC:", AIC_value_mlr_v1))
+print(paste("BIC:", BIC_value_mlr_v1))
+```
+
+```{r}
+set.seed(123)
+train_ix <- sample(1:nrow(Boston), nrow(Boston) * 0.7)
+train_data <- Boston[train_ix, ]
+test_data <- Boston[-train_ix, ]
+
+```
+
+```{r}
+model_mlr_v1_training <- lm(crim ~ lstat +  medv + zn + dis, data = train_data)
+summary(model_mlr_v1_training)
+
+
+```
+```{r}
+model_mlr_v1_test <- lm(crim ~ lstat +  medv + zn + dis, data = test_data)
+summary(model_mlr_v1_test)
+```
+
+
+Answer:
+In this analysis, I tried multiple linear regression first and make assumptions
+that all independent variables will have correlation with dependent variable.
+From p-value = 2.2e-16 < 0.05, we can tell that the model is statistically 
+significant. However, the coefficient in some independent variable is low means 
+that the relationship between that independent variable and dependent variable is
+weak. Therefore, in the second multiple linear regression model, I only choose 
+the independent variable which has high coefficient values. 
+
+From AIC and BIC values, the second model has lower values which means the second
+model performs better.
+
+
+```{r}
+# Polynomial regression model
+model_poly <- lm(crim ~ lstat *  medv * zn * dis, data = Boston)
+summary(model_poly)
+```
+```{r}
+# Calculate AIC and BIC
+AIC_value_poly <- AIC(model_poly)
+BIC_value_poly <- BIC(model_poly)
+
+# Print the results
+print(paste("AIC:", AIC_value_poly))
+print(paste("BIC:", BIC_value_poly))
+```
+
+
+```{r}
+# Polynomial regression model update
+model_poly_v1 <- lm(crim ~ lstat + lstat * medv + lstat * dis + lstat * 
+                     medv * dis, data = Boston)
+summary(model_poly_v1)
+```
+```{r}
+# Calculate AIC and BIC
+AIC_value_poly_v1 <- AIC(model_poly_v1)
+BIC_value_poly_v1 <- BIC(model_poly_v1)
+
+# Print the results
+print(paste("AIC:", AIC_value_poly_v1))
+print(paste("BIC:", BIC_value_poly_v1))
+```
+
+
+```{r}
+model_poly_v1_training <- lm(crim ~ lstat +  medv + zn + dis, data = train_data)
+summary(model_poly_v1_training)
+```
+
+```{r}
+model_poly_v1_test <- lm(crim ~ lstat +  medv + zn + dis, data = test_data)
+summary(model_poly_v1_test)
+```
+
+
+
+
+
+Answer:
+In this analysis, a Polynomial regression model was employed, with the assumption 
+that all independent variables are correlated. However, upon examination, it was 
+discovered that certain coefficients were not statistically significant. 
+Consequently, a refined Polynomial regression model was constructed, excluding 
+the non-significant independent variables. The AIC/BIC values of the refined 
+model indicate an improvement in model performance.
+
+I choose polynomial regression model is the best performance model
+
+crim = 2.744473 + 1.587191 × lstat + 0.202675 × medv + 0.188631 × dis −0.083230
+× lstat × medv − 0.328146 × lstat × dis − 0.052935 × medv × dis + 0.016057 × lstat
+× medv × dis
+
+The model's performance is assessed through various statistical metrics:
+
+Residuals: The residuals (errors) of the model are normally distributed, with 
+a mean of 0 and a standard deviation of 6.754.
+
+Coefficients: The coefficients of the independent variables are statistically 
+significant, as indicated by their low p-values (all < 0.05). This implies that 
+the independent variables (lstat, medv, dis) and their interactions have a 
+significant impact on the dependent variable (crim).
+
+Multiple R-squared: The multiple R-squared value of 0.392 indicates that 
+approximately 39.2% of the variability in the dependent variable (crim) can be 
+explained by the independent variables (lstat, medv, dis) and their interactions 
+in the model.
+
+Adjusted R-squared: The adjusted R-squared value of 0.3835 is similar to the 
+multiple R-squared value, indicating that the model's explanatory power remains 
+consistent even when accounting for the number of predictors.
+
+F-statistic: The F-statistic of 45.87 with a p-value < 2.2e-16 suggests that the 
+overall model is statistically significant, meaning that at least one of the 
+independent variables or their interactions has a significant effect on the 
+dependent variable.
+
+In summary, this polynomial regression model is considered the best because it 
+has statistically significant coefficients, a high R-squared value, and a low 
+residual standard error, indicating a good fit to the data.

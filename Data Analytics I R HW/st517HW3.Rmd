@@ -1,0 +1,139 @@
+---
+title: "ST517-HW3"
+author: Cindy Chen
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r}
+#install.packages("faraway")
+```
+
+
+
+```{r}
+data(corrosion, package = "faraway") # Load data from faraway package
+corrosion # Look at data
+?faraway::corrosion # Learn about dataset
+
+```
+(a) We are interested in modelling the weight loss due to corrosion as a function of Iron content, that
+is, Iron content is the explanatory variable, and weight loss is the response. Create a scatterplot of
+the data and describe the relationship you see.
+
+
+```{r}
+
+plot(corrosion$Fe, corrosion$loss, 
+     main = "The relationship between Iron Content vs Weight Loss",
+     xlab = "Iron Content (Fe)",
+     ylab = "Weight Loss")
+
+```
+(b) Fit a simple linear regression model to the data. State the mathematical form of the model and
+report the parameter estimates βˆ0, βˆ1, and ˆσ.
+
+
+```{r}
+fit <- lm(loss ~ Fe, data = corrosion)
+fit
+```
+```{r}
+summary(fit)
+```
+
+
+```{r}
+beta0 <- coef(fit)[1] 
+beta0
+beta1 <- coef(fit)[2] 
+beta1
+sigma <- summary(fit)$sigma
+sigma
+```
+
+
+(c) In the context of the data, interpret βˆ
+1 in one sentence.
+
+Answer: The estimated βˆ represents the estimated change in weight loss due to corrosion for 1 unit increase in iron content, eg, when 1 units increase in Fe, there will be -24.02 weight loss.
+
+
+(d) Repeat part (a), but this time include the regression line and confidence bands for the mean weight
+loss due to corrosion.
+
+```{r}
+library(ggplot2)
+
+ggplot(corrosion, aes(x = Fe, y = loss)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "The relationship between Iron Content vs Weight Loss",
+       x = "Iron Content (Fe)",
+       y = "Weight Loss")
+  
+```
+
+(e) Now plot the residuals (y-axis) against the explanatory variable iron content (x-axis). Are the
+residuals centered around zero at all values of iron content?
+
+```{r}
+residuals <- residuals(fit)
+residuals
+```
+```{r}
+residuals_data <- data.frame(Fe = corrosion$Fe, Residuals = residuals)
+residuals_data
+```
+```{r}
+library(ggplot2)
+ggplot(residuals_data, aes(x = Fe, y = Residuals)) +
+  geom_point() +
+  labs(title = "The relationship between Iron Content vs Residuals",
+       x = "Iron Content",
+       y = "Residuals")
+```
+
+Answer: From the chart, the
+residuals are not centered around zero at all values of iron content
+
+
+
+(f) Give the null and alternative hypothesis for a Lack of Fit test.
+
+$$ H0: The \ simple \ linear \ regression \ model \ fits \ well \ with \ the \ data.$$
+$$ H1: The \ simple \ linear \ regression \ model \ doesn't \ not fit \ well \ with \ the \ data \ and \ shows \ lack \ of \ fit.$$
+
+
+
+(g) Perform a lack of fit test on our model. Give the F-statistic and p-value. What do you conclude?
+*Hint: See Lecture 6 from this module, use factor() to help fit the separate means model in lm(),
+and use anova() to compare the two models
+
+```{r}
+fit_means <- lm(loss ~ factor(Fe), data=corrosion)
+fit_means
+```
+
+```{r}
+anova_result <- anova(fit, fit_means)
+anova_result
+```
+
+(h) In one sentence, why is it necessary for the Lack of Fit test that there are independent replicate
+responses at some values of the explanatory variable?
+
+Answer: The lack of fit test, it compares the variability within the data and variability predicted by the model and it helps determine if there are systematic patterns in the residuals to help choose appropriate model.
+
+2. (3 points) In the plots below, identify the SLR assumption that has been violated and explain your
+reasoning. (Chart see in PDF)
+
+(a)
+Answer: Linearity: The relationship between the dependent variable (Residuals) and the independent variable (Fitted Values) is linear. But from the chart, the relationship between The Fitted Values and Residuals shows like V shape.
+
+(b)
+Answer: Homoscedasiticity: The variability of the residuals is constant across all levels of the independent variable (Explanatory). It implies that the spread of the residuals should be the same for all values of the predictor.
+
+(c)
+Answer: No Perfect Multicollinearity: In the case of multiple independent variables, there should be no perfect linear retionship between them. From the chart, there is no clear relationship between Fitted Values and Rsiduals and it might be other independent variables have impact on Residuals.

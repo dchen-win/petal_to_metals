@@ -1,0 +1,275 @@
+---
+title: "Module 7 HW Submission"
+author: Cindy Chen
+output:
+  pdf_document:
+    latex_engine: xelatex 
+---
+
+1. The ergoStool dataset in the nlme package contains information on an experiment comparing the
+effort required by each of 9 Subjects to get up from each of 4 Types of stools.
+
+```{r}
+library(nlme)
+?ergoStool
+head(ergoStool)
+
+```
+```{r}
+#install.packages("emmeans", dependencies = TRUE)
+
+```
+
+
+
+
+(a) (1 point) Create at least one plot to explore the effects of Type and Subject on effort. Does there
+seem to be evidence of differences between stools? What about differences between subjects?
+
+```{r}
+
+library(ggplot2)
+
+line_chart <- ggplot(data = ergoStool, aes(x = Type, y = effort, group = Subject, color = Subject)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Effects of Type and Subject on Effort",
+       x = "Type",
+       y = "Effort",
+       color = "Subject")
+
+print(line_chart)
+
+```
+```{r}
+
+bar_chart <- ggplot(data = ergoStool, aes(x = Type, y = effort, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Effects of Type and Subject on Effort",
+       x = "Type",
+       y = "Effort",
+       fill = "Subject")
+
+
+print(bar_chart)
+```
+Answer:
+
+From the chart, we can see that there is evidence of differences between stools. 
+For the same subject, T2 has the highest effort, followed by T3, T4, and T1. 
+However, it will require more data sets to confirm our assumptions.
+
+From the chart, we can see that there is evidence of differences between subjects. 
+In general, for the same type, the order of effort from highest to lowest is 
+subject 2, 1, 7, 3, 6, 9, 4, 5, and 8.
+
+
+
+(b) (1 point) Fit a fixed effects model with effects for Type and Subject. Use this model to answer the
+question: are there any significant differences in effort between stool Type T1 and the other stool
+types? (Remember to quantify your answer with the relevant confidence intervals).
+
+```{r}
+
+model <- lm(effort ~ factor(Type) + factor(Subject), data = ergoStool)
+
+
+summary(model)
+```
+```{r}
+
+library(emmeans)
+modle_type <- emmeans(model, ~ Type)
+pairs <- contrast(modle_type, method = "revpairwise", simple = "each",
+reference = "T1")
+summary(pairs)
+
+```
+
+```{r}
+confint(pairs, method = "simultaneous", level = 0.95, adjust = "tukey")
+```
+Answer:
+
+From the result, we could make a conclusion that from the p values between T2-T1:
+<.0001, T3 - T1: 0.0014 are less than 0.05, indicating that these differences are
+statistically significant at 5% level.T4 - T1, is greater than 0.05 which means
+differences are not statistically significant at 5% level.
+
+T2 - T1: The estimated difference in effort between T2 and T1 is 3.889 units. 
+The 95% confidence interval for this difference is [2.458, 5.320]. 
+This means that we are 95% confident that the true difference in effort between 
+T2 and T1 is between 2.458 and 5.320 units.
+
+T3 - T1: The estimated difference in effort between T2 and T1 is 2.222 units. 
+The 95% confidence interval for this difference is [0.791, 3.653]. 
+This means that we are 95% confident that the true difference in effort between 
+T2 and T1 is between 0.791 and 3.653 units.
+
+(c) (1 point) Why would it be more appropriate to treat Subject as a random effect? How will the
+inferences about the stool types change if Subject is a random effect?
+
+Answer:
+
+A random effect allows for the possibility that the subjects are random sample 
+from a larger population and it accounts for the variability between subjects in 
+the larger population.
+
+When 'Subject' is treated as a random effect, the inferences about the stool 
+types will not change, but the model will account for the variability in 'effort' 
+between different 'Subject's. 
+
+
+
+(d) (1 point) Fit a mixed effects model where Type is a fixed effect, and there are random intercepts
+for each Subject. Interpret the estimates of the random effect standard deviations in the context
+of the study.
+
+```{r}
+model_d <- lme(effort ~ Type, random = ~1 | Subject, data = ergoStool)
+summary(model_d)
+```
+
+
+
+
+
+
+Answer:
+The estimate for TypeT2 is 3.888889, which means that, on average, the effort is 
+3.888889 units higher for TypeT2 compared to the reference level TypeT1.
+
+The estimate for TypeT3 is 2.222222, which means that, on average, the effort is 
+2.222222 units higher for TypeT3 compared to the reference level TypeT1.
+
+The estimate for TypeT4 is 0.666667, which means that, on average, the effort is 
+0.666667 units higher for TypeT4 compared to the reference level TypeT1.
+
+The p-values are all less than 0.05, which indicates that the estimated effects 
+of TypeT2, TypeT3 are statistically significant at the 5% level. This means that 
+there is strong evidence to suggest that the effort varies significantly across 
+the different levels of the Type variable. However, typeT4 having slightly higher 
+average effort but not significantly different from the reference level.
+
+The random effect standard deviation for the intercept (Subject) is 1.332465, 
+which means that the variability in the baseline effort level across subjects is 
+approximately 1.332465 units. This variability is not explained by the fixed 
+effect of Type.
+
+The random effect standard deviation for the residual (within-group) variability 
+is 1.100295, which means that the variability in effort within each subject 
+(group) is approximately 1.100295 units. This variability is not explained by the 
+fixed effect of Type or the random effect of Subject.
+
+
+
+
+(e) (2 points) Fit a mixed effects model with just a single mean, and a random intercept for each
+subject. Compare this model with the model in part (d) using anova().
+
+i. You’ll get a warning, research what it means and fix it.
+
+```{r}
+model_d <- lme(effort ~ Type, random = ~1 | Subject, data = ergoStool, method = 'ML')
+model_e <- lme(effort ~ 1, random = ~1 | Subject, data = ergoStool, method = 'ML')
+
+
+anova(model_d, model_e)
+
+```
+
+
+
+
+
+ii. What hypothesis is being tested? What do you conclude?
+
+$$H0: Simple \ model \ is \ sufficient \ to \ explain \ the \ data. $$
+$$H1: Alternative \ hypothesis \ more \ complex \ model \ is \ need \ to \ explain \ the \ data. $$
+
+Answer:
+
+In this case, the hypothesis being tested by the anova() function is whether the 
+more complex model model_d provides a significantly better fit to the data 
+compared to the simpler model model_e. This is done by comparing the 
+log-likelihoods of the two models using a likelihood ratio test.
+
+In this case, the p-value is less than 0.0001 means that there is strong evidence 
+to reject the null hypothesis and conclude that the more complex model model_d 
+provides a significantly better fit to the data compared to the simpler model 
+model_e. It approve that having different means of each level of 'Type' is important
+for explaining the variability in the response variable (effort).
+
+
+
+
+
+(f) (1 point) Repeat the inferences from part (b) using the mixed model from part (d).
+```{r}
+
+
+intervals(model_d)
+
+```
+
+
+
+Answer:
+
+Fixed Effects:
+
+(Intercept): The estimated mean effort for the reference level is 8.5555556, 
+with a 95% confidence interval of [7.3667247, 9.744386].
+
+TypeT2: The estimated difference in mean effort between TypeT2 and the reference 
+level is 3.8888889, with a 95% confidence interval of [2.8183781, 4.959400]. 
+
+TypeT3: The estimated difference in mean effort between TypeT3 and the reference 
+level is 2.2222222, with a 95% confidence interval of [1.1517114, 3.292733]. 
+
+TypeT4: The estimated difference in mean effort between TypeT4 and the reference 
+level is 0.6666667, with a 95% confidence interval of [-0.4038442, 1.737177]. 
+
+Random Effects:
+
+Subject: The estimated standard deviation of the random intercepts for the 
+Subject variable is 1.332465, with a 95% confidence interval of 
+[0.7495103, 2.368831].
+
+Within-group Standard Error:
+
+The estimated within-group standard error is 1.100295, with a 95% confidence 
+interval of [0.829353, 1.459750]. 
+
+
+
+(g) (3 points) Imagine you have a 10th subject.
+i. What would you predict for the mean effort of getting out of stool T1 for this subject? What
+would be a reasonable interval for this prediction? (You don’t actually have to calculate this
+interval, but discuss the contributors to your uncertainty in the prediction).
+
+Answer:
+For the 10th subject, the prediction for the mean effort of getting out of stool T1 would be based
+on the avg difference in the effort between stool type T1 and the reference stool type. It will take 
+into account that the deviation of the 10th subject's effort from the average effort for all subjects.
+
+A reasonable interval would be a confidence interval. It consider the uncertainty in the fixed effect
+estimate and uncertainty in the random effect estimate.
+
+
+
+
+ii. What would you predict for the difference in mean effort between getting out of stool T1 and T2
+for this subject? What would be a reasonable interval for this difference? (You don’t actually
+have to calculate this interval, but discuss the contributors to your uncertainty in the
+prediction).
+
+Answer:
+For the 10th subject, the prediction for the difference in the mean effort between getting out of stool
+T1 and T2 would be based on the average difference in the effort between stool type T1 and T2. It will take 
+into account that the deviation of the 10th subject's effort from the average effort for all subjects.
+
+A reasonable interval would be a confidence interval. It provides a range of values that the true difference 
+in mean effort between getting out of stool T1 and T2 for the 10th subject lies. It consider the uncertainty 
+in the fixed effect estimate and uncertainty in the random effect estimate.
+

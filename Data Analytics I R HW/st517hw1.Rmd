@@ -1,0 +1,236 @@
+---
+title: "ST517-HW1"
+author: Cindy Chen
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+
+1. Are basketball, baseball, and soccer players the same height on average? Suppose we take a random sample of 50 players from each of the three sports. Load the sample data \verb|sport_heights.csv| provided with the homework file.
+
+   Now you will perform an Analysis of Variance F-test step by step.  The code in the second lecture this week will be helpful.
+
+   (a) State the null and alternative hypothesis, in statistical notation, for testing whether players from the three sports have the same mean height.
+$$H_0: μ1 = μ2 = μ3 
+$$
+$$H_A: At \ least \ one \ of \ the \ mean \ height \ from \ the \ three \ sports \ is \ different \ from \ others$$
+
+   (b) Add columns to \verb|heights| for the overall average height and the average height for the sport of each player.
+ 
+   
+```{r 1(b)}
+
+heights <- read.csv('sport_heights.csv')
+
+# Calculate overall average height
+overall_avg_height <- mean(heights$height)
+
+# Calculate average height for each sport
+avg_height_per_sport <- heights |>
+  group_by(sport) |>
+  summarise(avg_height_sport = mean(height))
+
+
+heights <- heights |>
+  left_join(avg_height_per_sport, by = 'sport') |>
+  mutate(overall_avg_height)
+
+
+head(heights)
+
+```
+
+
+   (c) Calculate the between group sum of squares and within group sum of squares and their corresponding degrees of freedom.
+   
+```{r 1(c)}
+
+# Calculate between-group sum of squares and degrees of freedom
+SSB <- sum(table(heights$sport) * (avg_height_per_sport$avg_height_sport - overall_avg_height)^2)
+DFB <- length(unique(heights$sport)) - 1
+
+
+# Calculate within-group sum of squares and degrees of freedom
+SSW <- sum((heights$height - ave(heights$height, heights$sport, FUN = mean))^2)
+DFW <- nrow(heights) - length(unique(heights$sport))
+
+# Print results
+print(paste("Between-group sum of squares (SSB):", SSB))
+print(paste("Between-group degrees of freedom (DFB):", DFB))
+print(paste("Within-group sum of squares (SSW):", SSW))
+print(paste("Within-group degrees of freedom (DFW):", DFW))
+
+```
+
+
+   (d) Calculate the F-statistic, and give a p-value.
+   
+```{r 1(d)}
+# Calculate F-statistic
+F_statistic <- (SSB / DFB) / (SSW / DFW)
+
+# Calculate p-value
+p_value <- pf(F_statistic, DFB, DFW, lower.tail = FALSE)
+
+# Display the results
+cat("F-statistic:", F_statistic, "\n")
+cat("P-value:", p_value, "\n")
+```
+
+
+   (e) Now use \verb|oneway.test()| to verify your answer. Use \verb|var.equal = TRUE| and you should get the same answer.
+   
+```{r 1(e)}
+# Perform one-way ANOVA
+anova_result <- oneway.test(height ~ sport, data = heights, var.equal = TRUE)
+
+# Extract F-statistic and p-value
+F_statistic <- anova_result$statistic
+p_value <- anova_result$p.value
+
+# Display the results
+cat("F-statistic:", F_statistic, "\n")
+cat("P-value:", p_value, "\n")
+```
+
+
+   (f) In two sentences or less, what do you conclude?
+   
+Answer: The calculated F-statistic of 1.004516 and p-value of 0.3687214 > 0.05 suggests that, there is not enough evidence to reject the null hypo of mean height is the same across different sports. 
+   
+
+   (g) Create a column of the residuals in \verb|heights| by subtracting the average height from the sport of each player (i.e. the second column you created in (b)) from the \verb|height| column. Create side-by-side box-plots of these residuals. Do you think the equal variance assumption is violated?
+
+```{r 1(g)}
+
+# Create a column of residuals
+heights$residuals <- heights$height - heights$avg_height_sport
+
+ggplot(heights, aes(x = sport, y = residuals, fill = sport)) +
+  geom_boxplot() +
+  labs(title = "Residuals by Sport",
+       x = "sport",
+       y = "residuals")
+
+
+```
+Answer:
+Yes, based on the result, it appears that the equal variances assumption is likely violated. The residuals for different sports show varying ranges. 
+
+
+
+   
+   (h) Use \verb|oneway.test()| again, this time with \verb|var.equal = FALSE|. Give the F-statistic, p-value, and denominator degrees of freedom. Does the test indicate a different conclusion?
+
+
+```{r 1(h)}
+# Perform one-way ANOVA
+anova_result <- oneway.test(height ~ sport, data = heights, var.equal = FALSE)
+
+# Extract F-statistic and p-value
+F_statistic <- anova_result$statistic
+p_value <- anova_result$p.value
+
+# Display the results
+cat("F-statistic:", F_statistic, "\n")
+cat("P-value:", p_value, "\n")
+```
+Answer:    
+When we change the equal variances equal from true to false, the p-value change from (0.3687214) to (0.08284094). Both of the p-value indicates that there is not strong evidence to reject the null hypo. However, the changes in p-values suggests that relaxing the equal variance has an impact on the final results.
+
+
+
+   (i) In actuality, the data is generated from distributions with slightly different means, and non-constant variances. In two sentences or less, comment on what the difference in conclusions from the two tests.  Does this tell us anything about the robustness of the F-test to non-constant spreads?
+
+Answer:
+The conclusion between the two tests, the result is different when we change var.equal from True to False, highlight the F-test's sensitivity to equal variance assumptions. This different results indicates the limitations in the F-test's robustness to non-constant spreads and we need to carefully consider the alternative methods.
+   
+
+   (j) Food for thought: how would you perform a simulation to evaluate the robustness of the F-test to violation of the equal variance assumption? (You do not need to do this for the homework!)
+   
+  
+
+2. Using the data from the lab (\verb|case0501| in the \verb|Sleuth3| package), answer the question "Are there differences between the diets in their effect on lifetime?"
+
+   Make sure you clearly state your hypotheses, summarise your calculations, comment on the validity of the assumptions and include a short summary of your results in non-technical language.
+   
+$$H_0: There \ are \ no \ differences  \ between \ the \ diets \ in \ their \ effect \ on \ lifetime.
+$$
+
+$$H_1: There \ are \ differences  \ between \ the \ diets \ in \ their \ effect \ on \ lifetime.$$
+
+```{r}
+# Load necessary packages and data
+library(Sleuth3)
+data(case0501)
+
+# Explore the data
+head(case0501)
+
+# Choose and perform one-way ANOVA
+anova_result <- oneway.test(Lifetime ~ Diet, data = case0501, var.equal = TRUE)
+
+# Display ANOVA summary
+print(anova_result)
+```
+
+
+```{r}
+# Load necessary packages and data
+library(Sleuth3)
+data(case0501)
+
+# Explore the data
+head(case0501)
+
+# Choose and perform one-way ANOVA
+anova_result <- oneway.test(Lifetime ~ Diet, data = case0501, var.equal = FALSE)
+
+# Display ANOVA summary
+print(anova_result)
+```
+Conclusion: from the analysis, it shows that there is a significant difference in the lifetime across different diets.
+The p-values, which is extremely small indicates that there is strong evidence to reject the null hypo. The larger F-statistics (57.104 and 64.726) suggest substantial  variability in lifetimes among different diet groups. 
+
+   
+
+3. The following plot represents three trials of an experiment in which there are three treatments and five responses in each treatment.  Without doing any calculations, order the trials in increasing order of F-statistic. Explain your reasoning.
+
+\includegraphics[width=\textwidth]{hw1_q4.pdf}
+
+Answer: By simple analyze the visualization, we could make a conclusion that
+1) Treatment Trial 1:
+ a, There is wide range of values in y-axis for each x-value.
+ b, Variation with each x-value is obvious.
+ c, The data points shows scattered across the y-axis.
+
+2) Treatment Trial 2:
+ a, There is relatively wide range of values in y-axis for each x-value but it is more narrow than treatment 1.
+ b, There is some variation within each-values but it is less than treatment 1.
+ c, The data points is more close together to trail 1.
+ 
+3) Treatment Trail 3:
+ a, It has the most narrow range of values in y-axis for each x-value.
+ b, Minimal variation within each x-value.
+ c, Data points are group closely together.
+ 
+Treatment Trial 1 have the highest F-statistic due to the wider variation;
+Treatment Trial 2 has the second highest F-statistic due to the second wider variation; Treatment Trial 3 has the lowest F-statistic due to minimal variation. The reason why is that higher F-statistic values correspond to greater differences between treatment groups relatives to within treatment group variations.
+
+
+ 
+
+4. When calculating the denominator of the F-statistic, a.k.a. the pooled variance, why do we not simply average the group-level sample variances?
+
+Answer: They reason why is that we want to give more weight to groups with larger sample size. 
+
+In ANOVA, the F statistic is calculated as the ratio of the variance between groups to the variance within groups. The denominator represents the variance between groups and it is calculated by using the pooled variance. The purpose is the estimate the common variance within the groups.
+
+If we average the sample variances without considering the samples size, the smaller groups will have the same impact on the larger groups on the pooled variances. However, larger samples sizes provide more reliable estimates about the true variances within a group.
+
